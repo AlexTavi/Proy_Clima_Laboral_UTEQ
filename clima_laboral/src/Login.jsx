@@ -1,43 +1,30 @@
-import { useState } from 'react';
+import React from "react";
+import "./App.css";
+import { FaUser } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = e => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Email: ${email}\nPassword: ${password}`);
+    // Aquí podrías validar el usuario antes
+    navigate("/inicio/");
   };
 
   return (
     <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit} noValidate>
-        <h2>Iniciar Sesión</h2>
-
-        <label htmlFor="email">Correo electrónico</label>
-        <input
-          id="email"
-          type="email"
-          placeholder="ejemplo@correo.com"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-
-        <label htmlFor="password">Contraseña</label>
-        <input
-          id="password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
-
-        <button type="submit">Entrar</button>
+      <h1 className="login-title">RH</h1>
+      <form className="login-form" onSubmit={handleSubmit}>
+        <input type="text" placeholder="usuario o correo" />
+        <input type="password" placeholder="Contraseña" />
+        <button type="submit">
+          <FaUser className="icon" />
+          Iniciar sesión
+        </button>
       </form>
     </div>
   );
 }
+
 

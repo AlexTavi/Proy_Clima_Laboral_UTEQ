@@ -1,137 +1,86 @@
-/* Asegurar que toda la ventana tenga fondo azul y ocupe 100% altura */
+/* Fondo oscuro total y sin margen */
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #2563eb;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1f1f1f;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: white;
 }
 
-/* Body como flex container para centrar todo */
+/* Centrado del contenido */
 body {
   display: flex;
-  justify-content: center; /* horizontal */
-  align-items: center;     /* vertical */
-  height: 100vh;           /* toda la ventana visible */
-  margin: 0;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Contenedor del login */
+/* Contenedor */
 .login-container {
-  background: white;
-  padding: 3rem 3.5rem;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   max-width: 400px;
-  box-sizing: border-box;
-  animation: fadeInScale 0.5s ease forwards;
-}
-
-/* Animación */
-@keyframes fadeInScale {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  padding: 2rem;
 }
 
 /* Título */
-.login-form h2 {
-  margin-bottom: 2rem;
-  text-align: center;
-  color: #1e3a8a;
-  font-weight: 700;
-  font-size: 2rem;
-  letter-spacing: 0.05em;
+.login-title {
+  font-size: 4rem;
+  color: #d4d4d4;
+  font-weight: bold;
+  margin-bottom: 3rem;
   user-select: none;
 }
 
-/* Etiquetas */
-.login-form label {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-weight: 600;
-  color: #2563eb;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
+/* Formulario */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* Inputs */
 .login-form input {
-  width: 100%;
-  padding: 0.65rem 1rem;
-  margin-bottom: 1.5rem;
-  border: 2px solid #cbd5e1;
-  border-radius: 10px;
+  padding: 1rem;
+  background-color: #000;
+  color: white;
+  border: 2px solid #2563eb;
+  border-radius: 0.5rem;
   font-size: 1rem;
-  transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
-  outline-offset: 2px;
+  outline: none;
   font-family: inherit;
-  color: white;               /* texto blanco siempre */
-  background-color: #1e3a8a;  /* fondo azul oscuro por defecto */
 }
 
 .login-form input::placeholder {
-  color: #cbd5e1;             /* placeholder azul pastel más claro */
-  font-style: italic;
-  opacity: 1;
-}
-
-.login-form input:focus {
-  border-color: #7fc7ff;      /* borde azul pastel */
-  box-shadow: 0 0 8px 2px rgba(127, 199, 255, 0.6);
-  background-color: #7fc7ff;  /* fondo azul pastel suave */
-  color: white;               /* texto blanco en focus */
-  outline: none;
+  color: #e5e5e5;
+  font-weight: 300;
 }
 
 /* Botón */
 .login-form button {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  background-color: #2563eb;
   color: white;
-  font-weight: 700;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
   border: none;
-  border-radius: 12px;
+  border-radius: 9999px; /* completamente redondeado */
   cursor: pointer;
-  font-size: 1.15rem;
-  letter-spacing: 0.05em;
-  transition: background-color 0.3s, box-shadow 0.3s, transform 0.15s;
-  user-select: none;
-  box-shadow: 0 6px 12px rgba(30, 58, 138, 0.4);
+  transition: background-color 0.3s ease;
 }
 
 .login-form button:hover {
-  background-color: #2563eb;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.6);
-  transform: translateY(-2px);
+  background-color: #3b82f6;
 }
 
-.login-form button:active {
-  transform: translateY(0);
-  box-shadow: 0 6px 12px rgba(30, 58, 138, 0.4);
-}
-
-/* Adaptación para pantallas pequeñas */
-@media (max-width: 420px) {
-  .login-container {
-    padding: 2rem 2.5rem;
-    border-radius: 12px;
-    margin: 1rem;
-  }
-}
-
-
-.app-container {
-  height: 100vh;              /* altura de ventana */
-  display: flex;              /* flex container */
-  justify-content: center;    /* centrar horizontal */
-  align-items: center;        /* centrar vertical */
+/* Ícono dentro del botón */
+.login-form button .icon {
+  font-size: 1.2rem;
 }
