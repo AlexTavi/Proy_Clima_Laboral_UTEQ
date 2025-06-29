@@ -22,7 +22,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("http://192.168.0.187/api/login", {
+      const res = await fetch("http://192.168.0.182/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export default function Login() {
         return;
       }
 
-      const meRes = await fetch("http://192.168.0.187/api/me", {
+      const meRes = await fetch("http://192.168.0.182/api/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
           "Content-Type": "application/json",
