@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import './form.css';
 
 const NuevoFormulario = () => {
@@ -9,25 +8,40 @@ const NuevoFormulario = () => {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
+
+  const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
+  const adscripcionesDisponibles = ['Matriz', 'Sucursal', 'Norte', 'Sur', 'Noreste', 'Noroeste'];
+
+  const [puestosSeleccionados, setPuestosSeleccionados] = useState([]);
+  const [puestosExtra, setPuestosExtra] = useState([]);
+  const [adscripcionesSeleccionadas, setAdscripcionesSeleccionadas] = useState([]);
+  const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
+
   const [formData, setFormData] = useState({
     nombreEmpresa: '',
     giro: '',
+    subGiro: '',
+    otroGiro: '',
     empleados: '',
     domicilio: '',
     telefono: '',
     responsable: '',
-    adscripcion: '',
-    estructura: {
-      direccion: 0,
-      gerencias: 0,
-      jefaturas: 0,
-      administracion: 0,
-      departamentos: 0,
-    },
+    estructura: {},
   });
 
-  // Navigation links configuration
+  const girosCatalogo = {
+    'Sector industrial': ['Automotriz', 'Aeronáutica', 'Alimentos', 'Electrónica', 'Veterinaria'],
+    'Hospital': [],
+    'Institución educativa': [],
+    'Sector público': [],
+    'Servicios': ['Institución Financiera', 'Aseguradora'],
+    'Comercio': ['Tienda autoservicio', 'Tienda conveniencia', 'Tienda departamental'],
+    'Otros': [],
+  };
+
   const navLinks = [
     { path: "/forms/new", label: "Nuevo Formulario" },
     { path: "/forms", label: "Formularios" },
@@ -41,95 +55,108 @@ const NuevoFormulario = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
-
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
+      if (!token) return navigate('/login');
       try {
-        const response = await fetch('http://192.168.0.50/api/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const res = await fetch('http://192.168.0.50/api/me', {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) throw new Error('Token inválido');
-
-        const data = await response.json();
+        if (!res.ok) throw new Error('Token inválido');
+        const data = await res.json();
         setUsuario(data.user);
       } catch (err) {
-        setError(err.message);
         localStorage.removeItem('token');
-        localStorage.removeItem('usuario');
         navigate('/login');
       } finally {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [navigate]);
 
   const cerrarSesion = async () => {
     const token = localStorage.getItem('token');
-
     try {
       await fetch('http://192.168.0.50/api/logout', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
     } finally {
       localStorage.removeItem('token');
-      localStorage.removeItem('usuario');
       navigate('/login');
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleEstructuraChange = (e) => {
     const { name, value } = e.target;
-    const numValue = Math.max(0, parseInt(value) || 0);
-    
-    setFormData((prev) => ({
+    const num = Math.max(0, parseInt(value) || 0);
+    setFormData(prev => ({
       ...prev,
-      estructura: {
-        ...prev.estructura,
-        [name]: numValue,
-      },
+      estructura: { ...prev.estructura, [name]: num },
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const giroFinal = formData.giro === 'Otros'
+      ? formData.otroGiro
+      : (formData.subGiro || formData.giro);
+
+    const estructuraFinal = { ...formData.estructura };
+    puestosExtra.forEach(p => {
+      if (p.nombre) estructuraFinal[p.nombre.toLowerCase()] = p.numero;
+    });
+
+    const adscripcionesFinales = [...adscripcionesSeleccionadas, ...adscripcionesExtra.filter(Boolean)];
+
     try {
+      setError(null);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://192.168.0.50/api/forms', {
+      const res = await fetch('http://192.168.0.50/api/forms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          giro: giroFinal,
+          estructura: estructuraFinal,
+          adscripciones: adscripcionesFinales,
+        }),
       });
 
-      if (!response.ok) throw new Error('Error al guardar el formulario');
-
-      const data = await response.json();
-      console.log('Formulario guardado:', data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Error al guardar el formulario');
+      }
+      
+      setSuccess("Formulario guardado con éxito.");
+      setTimeout(() => setSuccess(null), 3000);
+      // Reset form after successful submission
+      setFormData({
+        nombreEmpresa: '',
+        giro: '',
+        subGiro: '',
+        otroGiro: '',
+        empleados: '',
+        domicilio: '',
+        telefono: '',
+        responsable: '',
+        estructura: {},
+      });
+      setPuestosSeleccionados([]);
+      setPuestosExtra([]);
+      setAdscripcionesSeleccionadas([]);
+      setAdscripcionesExtra([]);
+      setEmpleadosSeleccion('');
     } catch (err) {
       setError(err.message);
-      console.error('Error:', err);
     }
   };
 
@@ -140,52 +167,55 @@ const NuevoFormulario = () => {
       <header className="navbar">
         <div className="navbar-top">
           <div className="logo">RH</div>
-          
-          {/* Desktop Navigation */}
           <nav className="desktop-nav-links">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.path}
+            {navLinks.map(link => (
+              <Link 
+                key={link.path} 
+                to={link.path} 
                 className={`nav-link ${link.active ? 'active' : ''}`}
+                aria-current={link.active ? 'page' : undefined}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          
-          {/* Mobile Hamburger Button */}
+          <div className="desktop-profile-section">
+            <div className="profile-icon">👤 {usuario?.nombre}</div>
+            <button 
+              onClick={cerrarSesion} 
+              className="logout-button"
+              aria-label="Cerrar sesión"
+            >
+              Cerrar sesión
+            </button>
+          </div>
           <button 
-            className="hamburger-button"
+            className="hamburger-button" 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
+            aria-label="Menú de navegación"
           >
-            <div className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></div>
-            <div className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></div>
-            <div className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></div>
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
           </button>
         </div>
-        
-        {/* Mobile Navigation */}
         <div className={`nav-container ${isMenuOpen ? 'open' : ''}`}>
           <nav className="mobile-nav-links">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.path}
-                className={`nav-link ${link.active ? 'active' : ''}`}
+            {navLinks.map(link => (
+              <Link 
+                key={link.path}
+                to={link.path} 
+                className={`nav-link ${link.active ? 'active' : ''}`} 
                 onClick={() => setIsMenuOpen(false)}
+                aria-current={link.active ? 'page' : undefined}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
           <div className="profile-section">
-            <div className="profile-icon">
-              <span role="img" aria-label="perfil" className="profile-emoji">👤</span>
-              {usuario && <span className="profile-name">{usuario.nombre}</span>}
-            </div>
+            <div className="profile-icon">👤 {usuario?.nombre}</div>
             <button 
               onClick={cerrarSesion} 
               className="logout-button"
@@ -198,223 +228,334 @@ const NuevoFormulario = () => {
       </header>
 
       {error && (
-        <div className="error-message">
+        <div className="error-message" role="alert">
           {error}
-          <button onClick={() => setError(null)} className="error-close">
-            ×
-          </button>
+        </div>
+      )}
+      {success && (
+        <div className="success-message" role="status">
+          {success}
         </div>
       )}
 
       <main className="formulario-main">
         <h1 className="form-title">Nuevo Formulario</h1>
-        
         <form onSubmit={handleSubmit} className="form-grid">
-          {/* Company Information Section */}
           <section className="form-section">
             <h2 className="section-title">Información de la Empresa</h2>
-            
+
             <div className="form-group">
-              <label htmlFor="nombreEmpresa" className="form-label">
-                Nombre de la empresa
-              </label>
-              <input
-                type="text"
+              <label htmlFor="nombreEmpresa" className="form-label">Nombre de la empresa</label>
+              <input 
                 id="nombreEmpresa"
-                name="nombreEmpresa"
-                value={formData.nombreEmpresa}
-                onChange={handleChange}
+                name="nombreEmpresa" 
+                value={formData.nombreEmpresa} 
+                onChange={handleChange} 
                 className="form-input"
-                placeholder="Ej: Quattrocom"
-                required
+                required 
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="giro" className="form-label">
-                Tipo de empresa o sector
-              </label>
-              <select
+              <label htmlFor="giro" className="form-label">Catálogo de giros</label>
+              <select 
                 id="giro"
-                name="giro"
-                value={formData.giro}
-                onChange={handleChange}
+                name="giro" 
+                value={formData.giro} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData(prev => ({ ...prev, giro: val, subGiro: '', otroGiro: '' }));
+                }} 
                 className="form-select"
                 required
               >
-                <option value="">-- Selecciona --</option>
-                <option value="Automotriz">Sector Automotriz</option>
-                <option value="Aeronáutica">Aeronáutica</option>
-                <option value="Educativa">Institución Educativa</option>
-                <option value="Salud">Hospital / Veterinaria</option>
-                <option value="Servicios">Servicios</option>
+                <option value="">-- Selecciona un giro --</option>
+                {Object.keys(girosCatalogo).map(giro => (
+                  <option key={giro} value={giro}>{giro}</option>
+                ))}
+              </select>
+            </div>
+
+            {girosCatalogo[formData.giro]?.length > 0 && (
+              <div className="form-group">
+                <label htmlFor="subGiro" className="form-label">Subcategoría</label>
+                <select 
+                  id="subGiro"
+                  name="subGiro" 
+                  value={formData.subGiro} 
+                  onChange={handleChange} 
+                  className="form-select"
+                  required
+                >
+                  <option value="">-- Selecciona una subcategoría --</option>
+                  {girosCatalogo[formData.giro].map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formData.giro === 'Otros' && (
+              <div className="form-group">
+                <label htmlFor="otroGiro" className="form-label">Especifique el giro</label>
+                <input 
+                  id="otroGiro"
+                  name="otroGiro" 
+                  value={formData.otroGiro} 
+                  onChange={handleChange} 
+                  className="form-input"
+                  required 
+                />
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="empleadosSeleccion" className="form-label">Número de empleados</label>
+              <select
+                id="empleadosSeleccion"
+                name="empleadosSeleccion"
+                value={empleadosSeleccion}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmpleadosSeleccion(value);
+                  if (value !== "Otros") {
+                    setFormData(prev => ({ ...prev, empleados: value }));
+                  } else {
+                    setFormData(prev => ({ ...prev, empleados: "" }));
+                  }
+                }}
+                className="form-select"
+                required
+              >
+                <option value="">-- Selecciona un rango --</option>
+                <option value="10-50">De 10 a 50</option>
+                <option value="51-100">De 51 a 100</option>
+                <option value="101-200">De 101 a 200</option>
+                <option value="201-300">De 201 a 300</option>
+                <option value="301-400">De 301 a 400</option>
+                <option value="401-500">De 401 a 500</option>
+                <option value="501-1000">De 501 a 1000</option>
                 <option value="Otros">Otros</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                Número de empleados participantes
-              </label>
-              <div className="radio-group">
-                {["De 10 a 50", "De 51 a 100", "De 101 a 200", "De 201 a 300", "De 301 a 400", "Más de 400"].map((item) => (
-                  <label key={item} className="radio-label">
-                    <input
-                      type="radio"
-                      name="empleados"
-                      value={item}
-                      checked={formData.empleados === item}
-                      onChange={handleChange}
-                      className="radio-input"
-                    />
-                    <span className="radio-custom"></span>
-                    {item}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Contact Information Section */}
-          <section className="form-section">
-            <h2 className="section-title">Información de Contacto</h2>
-            
-            <div className="form-group">
-              <label htmlFor="domicilio" className="form-label">
-                Domicilio
-              </label>
-              <input
-                type="text"
-                id="domicilio"
-                name="domicilio"
-                value={formData.domicilio}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="telefono" className="form-label">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                id="telefono"
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="responsable" className="form-label">
-                Responsable
-              </label>
-              <input
-                type="text"
-                id="responsable"
-                name="responsable"
-                value={formData.responsable}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="adscripcion" className="form-label">
-                Adscripción
-              </label>
-              <select
-                id="adscripcion"
-                name="adscripcion"
-                value={formData.adscripcion}
-                onChange={handleChange}
-                className="form-select"
-              >
-                <option value="">-- Selecciona --</option>
-                <option value="Matriz">Matriz</option>
-                <option value="Sucursal">Sucursal</option>
-                <option value="Norte">Norte</option>
-                <option value="Sur">Sur</option>
-                <option value="Noreste">Noreste</option>
-                <option value="Noroeste">Noroeste</option>
-                <option value="Otras">Otras</option>
-              </select>
-            </div>
-          </section>
-
-          {/* Organizational Structure Section */}
-          <section className="form-section">
-            <h2 className="section-title">Estructura Organizacional</h2>
-            
-            {Object.entries(formData.estructura).map(([key, value]) => (
-              <div key={key} className="form-group">
-                <label htmlFor={key} className="form-label">
-                  {key.charAt(0).toUpperCase() + key.slice(1)}:
-                </label>
+            {empleadosSeleccion === "Otros" && (
+              <div className="form-group">
+                <label htmlFor="empleados" className="form-label">Especifique el número de empleados</label>
                 <input
+                  id="empleados"
                   type="number"
-                  id={key}
-                  name={key}
-                  min="0"
-                  value={value}
-                  onChange={handleEstructuraChange}
-                  className="form-input number-input"
+                  name="empleados"
+                  value={formData.empleados}
+                  onChange={handleChange}
+                  className="form-input"
+                  min="1"
+                  required
                 />
               </div>
+            )}
+          </section>
+
+          <section className="form-section">
+            <h2 className="section-title">Información de Contacto</h2>
+            <div className="form-group">
+              <label htmlFor="domicilio" className="form-label">Domicilio</label>
+              <input 
+                id="domicilio"
+                name="domicilio" 
+                value={formData.domicilio} 
+                onChange={handleChange} 
+                className="form-input"
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="telefono" className="form-label">Teléfono</label>
+              <input 
+                id="telefono"
+                name="telefono" 
+                value={formData.telefono} 
+                onChange={handleChange} 
+                className="form-input"
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="responsable" className="form-label">Responsable</label>
+              <input 
+                id="responsable"
+                name="responsable" 
+                value={formData.responsable} 
+                onChange={handleChange} 
+                className="form-input"
+                required 
+              />
+            </div>
+          </section>
+
+          <section className="form-section">
+            <h2 className="section-title">Estructura Organizacional</h2>
+            <p className="section-description">Niveles de puestos y número de ocupantes:</p>
+            <div className="checkbox-container">
+              {nivelesPuestos.map((puesto) => (
+                <div key={puesto} className="checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      id={`puesto-${puesto}`}
+                      checked={puestosSeleccionados.includes(puesto)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setPuestosSeleccionados(prev =>
+                          checked ? [...prev, puesto] : prev.filter(p => p !== puesto)
+                        );
+                      }}
+                      className="checkbox-input"
+                    />
+                    <span className="checkbox-custom"></span>
+                    {puesto}
+                  </label>
+                  {puestosSeleccionados.includes(puesto) && (
+                    <input
+                      type="number"
+                      name={puesto.toLowerCase()}
+                      value={formData.estructura[puesto.toLowerCase()] || 0}
+                      onChange={handleEstructuraChange}
+                      className="form-input number-input"
+                      min="0"
+                      placeholder={`Nº de ${puesto}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {puestosExtra.map((puesto, idx) => (
+              <div key={`puesto-extra-${idx}`} className="form-group extra-input-group">
+                <input
+                  type="text"
+                  value={puesto.nombre}
+                  onChange={(e) => {
+                    const nuevoNombre = e.target.value;
+                    setPuestosExtra(prev => {
+                      const copy = [...prev];
+                      copy[idx].nombre = nuevoNombre;
+                      return copy;
+                    });
+                  }}
+                  className="form-input"
+                  placeholder="Nombre del puesto adicional"
+                  aria-label="Nombre del puesto adicional"
+                />
+                <input
+                  type="number"
+                  value={puesto.numero}
+                  onChange={(e) => {
+                    const numero = parseInt(e.target.value) || 0;
+                    setPuestosExtra(prev => {
+                      const copy = [...prev];
+                      copy[idx].numero = numero;
+                      return copy;
+                    });
+                  }}
+                  className="form-input number-input"
+                  min="0"
+                  placeholder="Nº ocupantes"
+                  aria-label="Número de ocupantes"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPuestosExtra(prev => prev.filter((_, i) => i !== idx));
+                  }}
+                  className="remove-button"
+                  aria-label="Eliminar puesto"
+                >
+                  ×
+                </button>
+              </div>
             ))}
+
+            <button 
+              type="button" 
+              onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}
+              className="add-button"
+            >
+              + Agregar otro puesto
+            </button>
+          </section>
+
+          <section className="form-section">
+            <h2 className="section-title">Adscripciones</h2>
+            <div className="checkbox-container">
+              {adscripcionesDisponibles.map((ads) => (
+                <div key={ads} className="checkbox-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      id={`ads-${ads}`}
+                      checked={adscripcionesSeleccionadas.includes(ads)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setAdscripcionesSeleccionadas(prev =>
+                          checked ? [...prev, ads] : prev.filter(a => a !== ads)
+                        );
+                      }}
+                      className="checkbox-input"
+                    />
+                    <span className="checkbox-custom"></span>
+                    {ads}
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            {adscripcionesExtra.map((ads, idx) => (
+              <div key={`ads-extra-${idx}`} className="form-group extra-input-group">
+                <input
+                  type="text"
+                  value={ads}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAdscripcionesExtra(prev => {
+                      const copy = [...prev];
+                      copy[idx] = val;
+                      return copy;
+                    });
+                  }}
+                  className="form-input"
+                  placeholder="Adscripción adicional"
+                  aria-label="Adscripción adicional"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdscripcionesExtra(prev => prev.filter((_, i) => i !== idx));
+                  }}
+                  className="remove-button"
+                  aria-label="Eliminar adscripción"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+
+            <button 
+              type="button" 
+              onClick={() => setAdscripcionesExtra([...adscripcionesExtra, ''])}
+              className="add-button"
+            >
+              + Agregar otra adscripción
+            </button>
           </section>
 
           <div className="form-actions">
-            <button type="submit" className="submit-button">
-              Guardar Formulario
-            </button>
+            <button type="submit" className="submit-button">Guardar Formulario</button>
           </div>
         </form>
       </main>
-
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-item">
-            <span className="footer-icon">✉️</span>
-            <div className="footer-text">
-              <div>despachoRH@gmail.com</div>
-              <div>+52 442 623 927 5</div>
-            </div>
-          </div>
-          
-          <div className="footer-item">
-            <span className="footer-icon">📍</span>
-            <div className="footer-text">
-              <div>Fuerte de alora 217 Col. el vergel,</div>
-              <div>Santiago de Querétaro QRO</div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
-};
-
-NuevoFormulario.propTypes = {
-  nombreEmpresa: PropTypes.string,
-  giro: PropTypes.string,
-  empleados: PropTypes.string,
-  domicilio: PropTypes.string,
-  telefono: PropTypes.string,
-  responsable: PropTypes.string,
-  adscripcion: PropTypes.string,
-  estructura: PropTypes.shape({
-    direccion: PropTypes.number,
-    gerencias: PropTypes.number,
-    jefaturas: PropTypes.number,
-    administracion: PropTypes.number,
-    departamentos: PropTypes.number,
-  }),
 };
 
 export default NuevoFormulario;
