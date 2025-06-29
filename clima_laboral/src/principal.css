@@ -1,0 +1,197 @@
+/* Reset básico y base */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #1f1f1f;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Contenedor principal */
+.principal-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background-color: #1f1f1f;
+}
+
+/* Botón hamburguesa */
+.toggle-sidebar-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 3000; /* Encima de todo */
+  background-color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+.toggle-sidebar-btn:hover {
+  background-color: #1d4ed8;
+}
+
+/* Sidebar en escritorio */
+.ps-sidebar-container {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+  background-color: #000;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+  width: 260px !important;
+  min-width: 260px;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+/* Botones del menú */
+.ps-menu-button {
+  border-radius: 9999px !important;
+  padding: 0.75rem 1rem !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #ccc !important;
+  background-color: transparent !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ps-menu-button:hover {
+  background-color: #2563eb !important;
+  color: #fff !important;
+  cursor: pointer;
+}
+.ps-menu-button.ps-active {
+  background-color: #2563eb !important;
+  color: #fff !important;
+}
+
+/* Login button styles */
+.ps-menu-button.login-button {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+.ps-menu-button.login-button:hover {
+  background-color: #45a049 !important;
+}
+
+/* Área de contenido */
+.content {
+  flex: 1;
+  padding: 2rem 3rem 3rem 3rem;
+  overflow-y: auto;
+  background-color: #121212;
+  color: #d4d4d4;
+  -webkit-overflow-scrolling: touch;
+  outline: none;
+}
+.content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+}
+.content p {
+  margin-bottom: 1.2rem;
+  line-height: 1.6;
+  font-size: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Scroll personalizado */
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+.content::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+.content::-webkit-scrollbar-thumb {
+  background-color: #2563eb;
+  border-radius: 4px;
+}
+
+/* Vista móvil */
+@media (max-width: 768px) {
+  .principal-container {
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* Sidebar horizontal oculto en móvil por defecto */
+  .ps-sidebar-container {
+    display: none;
+  }
+
+  /* Sidebar móvil vertical desplegable */
+  .mobile-sidebar {
+    position: fixed;
+    top: 3.8rem; /* Debajo del botón hamburguesa */
+    left: 0;
+    right: 0;
+    background-color: #000;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 2000;
+  }
+
+  .mobile-sidebar button {
+    background-color: transparent;
+    border: none;
+    color: #ccc;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-sidebar button:hover,
+  .mobile-sidebar .active {
+    background-color: #2563eb;
+    color: #fff;
+  }
+
+  /* Mobile Login Button */
+  .mobile-login-button {
+    background-color: #4CAF50 !important;
+    color: white !important;
+  }
+  .mobile-login-button:hover {
+    background-color: #45a049 !important;
+  }
+
+  /* Ajuste del contenido móvil para no ser tapado por el botón */
+  .content {
+    padding-top: 4rem; /* MÁS espacio arriba para botón hamburguesa */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 1.5rem;
+    height: calc(100vh - 4rem);
+    overflow-y: auto;
+    margin-top: 0;
+    transition: margin-top 0.3s ease;
+  }
+
+  /* Más margen arriba para el título, para estar seguro */
+  .content h1 {
+    margin-top: 1rem;
+  }
+
+  /* Cuando el menú móvil está visible */
+  .content-shifted {
+    margin-top: 0;
+  }
+}
