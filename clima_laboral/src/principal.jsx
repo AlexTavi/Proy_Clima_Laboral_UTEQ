@@ -18,7 +18,6 @@ const sections = [
     content: [
       "Grupo CREHCE es una firma de Consultoría en Recursos Humanos con más de 30 años de experiencia, atendiendo empresas de diversos sectores.",
       "Nuestro objetivo es proporcionar herramientas para fortalecer el capital humano y maximizar las competencias de cada colaborador.",
-      "Conoce más de nosotros: Presentación - 2025",
       "Tenemos una sólida experiencia en el desarrollo de proyectos de diversa índole en el área de recursos humanos, para empresas de diferentes sectores y tamaños.",
       "Contamos con una amplia visión, debido al conocimiento de diversas culturas y procesos de trabajo, por ello, tenemos la posibilidad de aportar soluciones efectivas para la solución de problemas.",
     ],
