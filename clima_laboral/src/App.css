@@ -1,5 +1,10 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
 /* Fondo oscuro total y sin margen */
-html, body, #root {
+html, body, #root, .app-container {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -8,11 +13,56 @@ html, body, #root {
   color: white;
 }
 
-/* Centrado del contenido */
-body {
+/* Full viewport coverage */
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* App container for proper layout */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent double scrollbars */
+}
+
+/* Scrollable content area */
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #2563eb #1f1f1f; /* For Firefox */
+}
+
+/* Custom scrollbar for WebKit browsers */
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background-color: #2563eb;
+  border-radius: 4px;
+}
+
+/* Centered content for login page */
+.login-page-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* Make sure all child components fill the container */
+.app-container > * {
+  flex: 1;
+  width: 100%;
 }
 
 /* Contenedor */
@@ -20,9 +70,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   width: 100%;
   max-width: 400px;
   padding: 2rem;
+  margin: auto;
 }
 
 /* Título */

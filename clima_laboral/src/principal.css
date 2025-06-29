@@ -16,6 +16,7 @@ html, body, #root {
   height: 100%;
   width: 100%;
   background-color: #1f1f1f;
+  min-height: 100vh; /* Added to prevent content collapse */
 }
 
 /* Botón hamburguesa */
@@ -79,6 +80,7 @@ html, body, #root {
 .ps-menu-button.login-button {
   background-color: #4CAF50 !important;
   color: white !important;
+  margin-top: auto; /* Push to bottom of sidebar */
 }
 .ps-menu-button.login-button:hover {
   background-color: #45a049 !important;
@@ -93,6 +95,7 @@ html, body, #root {
   color: #d4d4d4;
   -webkit-overflow-scrolling: touch;
   outline: none;
+  min-height: 100vh; /* Added to prevent content collapse */
 }
 .content h1 {
   font-size: 2.5rem;
@@ -141,6 +144,8 @@ html, body, #root {
     flex-direction: column;
     gap: 1rem;
     z-index: 2000;
+    max-height: calc(100vh - 3.8rem);
+    overflow-y: auto;
   }
 
   .mobile-sidebar button {
@@ -168,6 +173,7 @@ html, body, #root {
   .mobile-login-button {
     background-color: #4CAF50 !important;
     color: white !important;
+    margin-top: 1rem; /* Added spacing */
   }
   .mobile-login-button:hover {
     background-color: #45a049 !important;
@@ -194,4 +200,19 @@ html, body, #root {
   .content-shifted {
     margin-top: 0;
   }
+}
+
+/* New additions for layout fixes */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.principal-container {
+  min-height: 100vh;
+}
+
+.content {
+  min-height: 100vh;
 }

@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import './inicio.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Inicio = () => {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Verificar si hay sesión activa
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
 
@@ -16,7 +29,7 @@ const Inicio = () => {
       return;
     }
 
-    fetch('http://192.168.0.187/api/me', {
+    fetch('http://192.168.0.50/api/me', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -40,7 +53,7 @@ const Inicio = () => {
   const cerrarSesion = () => {
     const token = localStorage.getItem('token');
 
-    fetch('http://192.168.0.187/api/logout', {
+    fetch('http://192.168.0.50/api/logout', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -52,26 +65,71 @@ const Inicio = () => {
     });
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   if (loading) return <p>Cargando...</p>;
 
   return (
     <div className="inicio-container">
       <header className="navbar">
         <div className="logo">RH</div>
-        <nav className="nav-links">
-          <a href="../forms/">Nuevo Formulario</a>
-          <a href="#">Formularios</a>
-          <a href="#">Registros</a>
-          <a href="#">Dashboards</a>
-        </nav>
-        <div className="profile-icon">
-          <span role="img" aria-label="perfil">👤</span>
-          {usuario && <span style={{ marginLeft: '8px' }}>{usuario.nombre}</span>}
-          <button onClick={cerrarSesion} style={{ marginLeft: '12px', background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            Cerrar sesión
+        
+        {isMobile && (
+          <button className="hamburger-button" onClick={toggleMenu}>
+            {isMenuOpen ? '✕' : '☰'}
           </button>
-        </div>
+        )}
+        
+        {!isMobile && (
+          <>
+            <nav className="nav-links">
+              <Link to="/forms/new">Nuevo Formulario</Link>
+              <Link to="#">Formularios</Link>
+              <Link to="#">Registros</Link>
+              <Link to="#">Dashboards</Link>
+            </nav>
+            <div className="profile-icon">
+              <span role="img" aria-label="perfil">👤</span>
+              {usuario && <span className="username">{usuario.nombre}</span>}
+              <button 
+                onClick={cerrarSesion} 
+                className="logout-button"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </>
+        )}
+        
+        {isMobile && (
+          <nav className={`nav-links mobile ${isMenuOpen ? 'open' : ''}`}>
+            <Link to="/forms/new" onClick={toggleMenu}>Nuevo Formulario</Link>
+            <Link to="#" onClick={toggleMenu}>Formularios</Link>
+            <Link to="#" onClick={toggleMenu}>Registros</Link>
+            <Link to="#" onClick={toggleMenu}>Dashboards</Link>
+            
+            <div className="mobile-profile">
+              <span role="img" aria-label="perfil">👤</span>
+              {usuario && <span className="username">{usuario.nombre}</span>}
+              <button 
+                onClick={() => {
+                  cerrarSesion();
+                  toggleMenu();
+                }} 
+                className="logout-button"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </nav>
+        )}
       </header>
+
+      {isMobile && isMenuOpen && (
+        <div className="menu-overlay" onClick={toggleMenu} />
+      )}
 
       <main className="hero">
         <h1>Mejora y transforma tu ambiente laboral</h1>

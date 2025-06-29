@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaTools,
@@ -89,6 +90,7 @@ const Principal = () => {
   const [selected, setSelected] = useState(sections[0].id);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const isMobile = windowWidth < 768;
   const currentSection = sections.find((s) => s.id === selected);
@@ -105,9 +107,7 @@ const Principal = () => {
   };
 
   const handleLogin = () => {
-    // Add your login logic here
-    console.log("Login button clicked");
-    // You can redirect to login page or show a login modal
+    navigate('/login');
   };
 
   return (
@@ -133,7 +133,6 @@ const Principal = () => {
               {icon} {title}
             </button>
           ))}
-          {/* Login Button */}
           <button
             onClick={handleLogin}
             className="ps-menu-button login-button"
@@ -155,7 +154,6 @@ const Principal = () => {
               {icon} {title}
             </button>
           ))}
-          {/* Login Button */}
           <button
             onClick={handleLogin}
             className="mobile-login-button"
@@ -165,13 +163,10 @@ const Principal = () => {
         </div>
       )}
 
-      {/* Contenido principal */}
       <main
         className={`content ${
           isMobile && mobileMenuOpen ? "content-shifted" : ""
         }`}
-        role="main"
-        tabIndex={-1}
       >
         <h1>{currentSection.title}</h1>
         {currentSection.content.map((text, i) => (
