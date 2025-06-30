@@ -87,7 +87,7 @@ const Inicio = () => {
             <nav className="nav-links">
               <Link to="/forms/new">Nuevo Formulario</Link>
               <Link to="#">Formularios</Link>
-              <Link to="#">Registros</Link>
+              <Link to="/registros">Registros</Link>
               <Link to="#">Dashboards</Link>
             </nav>
             <div className="profile-icon">
@@ -107,7 +107,7 @@ const Inicio = () => {
           <nav className={`nav-links mobile ${isMenuOpen ? 'open' : ''}`}>
             <Link to="/forms/new" onClick={toggleMenu}>Nuevo Formulario</Link>
             <Link to="#" onClick={toggleMenu}>Formularios</Link>
-            <Link to="#" onClick={toggleMenu}>Registros</Link>
+            <Link to="/registros" onClick={toggleMenu}>Registros</Link>
             <Link to="#" onClick={toggleMenu}>Dashboards</Link>
             
             <div className="mobile-profile">

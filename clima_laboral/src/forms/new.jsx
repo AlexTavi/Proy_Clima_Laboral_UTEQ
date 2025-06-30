@@ -11,6 +11,7 @@ const NuevoFormulario = () => {
   const [success, setSuccess] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
+  const [answers, setAnswers] = useState({});
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
   const adscripcionesDisponibles = ['Matriz', 'Sucursal', 'Norte', 'Sur', 'Noreste', 'Noroeste'];
@@ -19,6 +20,8 @@ const NuevoFormulario = () => {
   const [puestosExtra, setPuestosExtra] = useState([]);
   const [adscripcionesSeleccionadas, setAdscripcionesSeleccionadas] = useState([]);
   const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
+  const [additionalQuestions, setAdditionalQuestions] = useState([]);
+  const [newQuestionType, setNewQuestionType] = useState('open');
 
   const [formData, setFormData] = useState({
     nombreEmpresa: '',
@@ -100,8 +103,43 @@ const NuevoFormulario = () => {
     }));
   };
 
+  const handleAnswerChange = (questionIndex, value) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionIndex]: { ...prev[questionIndex], answer: value }
+    }));
+  };
+
+  const handleOptionSelect = (questionIndex, option) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionIndex]: { ...prev[questionIndex], selectedOption: option }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const hasEmptyQuestions = additionalQuestions.some(q => 
+      !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
+    );
+    
+    if (hasEmptyQuestions) {
+      setError('Por favor complete todas las preguntas adicionales');
+      return;
+    }
+
+    const hasEmptyAnswers = additionalQuestions.some((q, index) => {
+      if (!answers[index]) return true;
+      if (q.type === 'multiple' && !answers[index].selectedOption) return true;
+      if (q.type !== 'multiple' && !answers[index].answer) return true;
+      return false;
+    });
+
+    if (hasEmptyAnswers) {
+      setError('Por favor responda todas las preguntas adicionales');
+      return;
+    }
 
     const giroFinal = formData.giro === 'Otros'
       ? formData.otroGiro
@@ -128,6 +166,8 @@ const NuevoFormulario = () => {
           giro: giroFinal,
           estructura: estructuraFinal,
           adscripciones: adscripcionesFinales,
+          additionalQuestions,
+          answers,
         }),
       });
 
@@ -138,7 +178,6 @@ const NuevoFormulario = () => {
       
       setSuccess("Formulario guardado con éxito.");
       setTimeout(() => setSuccess(null), 3000);
-      // Reset form after successful submission
       setFormData({
         nombreEmpresa: '',
         giro: '',
@@ -155,6 +194,8 @@ const NuevoFormulario = () => {
       setAdscripcionesSeleccionadas([]);
       setAdscripcionesExtra([]);
       setEmpleadosSeleccion('');
+      setAdditionalQuestions([]);
+      setAnswers({});
     } catch (err) {
       setError(err.message);
     }
@@ -547,6 +588,180 @@ const NuevoFormulario = () => {
             >
               + Agregar otra adscripción
             </button>
+          </section>
+
+          <section className="form-section">
+            <h2 className="section-title">Preguntas opcionales</h2>
+            
+            {additionalQuestions.map((question, index) => (
+              <div key={index} className="question-group">
+                <div className="question-header">
+                  <span className="question-type-badge">
+                    {question.type === 'open' && 'Abierta'}
+                    {question.type === 'closed' && 'Cerrada (Sí/No)'}
+                    {question.type === 'multiple' && 'Opción múltiple'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdditionalQuestions(prev => prev.filter((_, i) => i !== index));
+                      const newAnswers = {...answers};
+                      delete newAnswers[index];
+                      setAnswers(newAnswers);
+                    }}
+                    className="remove-button"
+                    aria-label="Eliminar pregunta"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="form-group">
+                  <input
+                    type="text"
+                    value={question.text}
+                    onChange={(e) => {
+                      const updatedQuestions = [...additionalQuestions];
+                      updatedQuestions[index].text = e.target.value;
+                      setAdditionalQuestions(updatedQuestions);
+                    }}
+                    className="form-input"
+                    placeholder="Escriba la pregunta"
+                    required
+                  />
+                </div>
+                
+                <div className="answer-section">
+                  {question.type === 'open' && (
+                    <input
+                      type="text"
+                      value={answers[index]?.answer || ''}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      className="form-input"
+                      placeholder="Escriba su respuesta"
+                      required
+                    />
+                  )}
+                  
+                  {question.type === 'closed' && (
+                    <div className="closed-options">
+                      <label className="radio-label">
+                        <input
+                          type="radio"
+                          name={`closed-${index}`}
+                          checked={answers[index]?.answer === 'Sí'}
+                          onChange={() => handleAnswerChange(index, 'Sí')}
+                          className="radio-input"
+                        />
+                        <span className="radio-custom"></span>
+                        Sí
+                      </label>
+                      <label className="radio-label">
+                        <input
+                          type="radio"
+                          name={`closed-${index}`}
+                          checked={answers[index]?.answer === 'No'}
+                          onChange={() => handleAnswerChange(index, 'No')}
+                          className="radio-input"
+                        />
+                        <span className="radio-custom"></span>
+                        No
+                      </label>
+                    </div>
+                  )}
+                  
+                  {question.type === 'multiple' && (
+                    <div className="multiple-options">
+                      {question.options.map((option, optIndex) => (
+                        <label key={optIndex} className="radio-label">
+                          <input
+                            type="radio"
+                            name={`multiple-${index}`}
+                            checked={answers[index]?.selectedOption === option}
+                            onChange={() => handleOptionSelect(index, option)}
+                            className="radio-input"
+                          />
+                          <span className="radio-custom"></span>
+                          {option}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {question.type === 'multiple' && (
+                  <div className="options-container">
+                    {question.options.map((option, optIndex) => (
+                      <div key={optIndex} className="option-input-group">
+                        <input
+                          type="text"
+                          value={option}
+                          onChange={(e) => {
+                            const updatedQuestions = [...additionalQuestions];
+                            updatedQuestions[index].options[optIndex] = e.target.value;
+                            setAdditionalQuestions(updatedQuestions);
+                          }}
+                          className="form-input"
+                          placeholder={`Opción ${optIndex + 1}`}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedQuestions = [...additionalQuestions];
+                            updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
+                            setAdditionalQuestions(updatedQuestions);
+                          }}
+                          className="remove-button small"
+                          aria-label="Eliminar opción"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedQuestions = [...additionalQuestions];
+                        updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
+                        setAdditionalQuestions(updatedQuestions);
+                      }}
+                      className="add-button small"
+                    >
+                      + Agregar opción
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            <div className="add-question-controls">
+              <select
+                value={newQuestionType}
+                onChange={(e) => setNewQuestionType(e.target.value)}
+                className="form-select"
+              >
+                <option value="open">Pregunta abierta</option>
+                <option value="closed">Pregunta cerrada (Sí/No)</option>
+                <option value="multiple">Opción múltiple</option>
+              </select>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const newQuestion = {
+                    text: '',
+                    type: newQuestionType,
+                    ...(newQuestionType === 'multiple' ? { options: [''] } : {})
+                  };
+                  setAdditionalQuestions([...additionalQuestions, newQuestion]);
+                }}
+                className="add-button"
+              >
+                + Agregar pregunta
+              </button>
+            </div>
           </section>
 
           <div className="form-actions">

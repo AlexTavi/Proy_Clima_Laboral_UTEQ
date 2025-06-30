@@ -3,6 +3,7 @@ import Principal from './principal';
 import Login from './Login';
 import Inicio from './inicio/inicio';
 import NuevoFormulario from './forms/new';
+import ListadoFormularios from './registros/registros'; // or your new path
 import './App.css';
 
 function App() {
@@ -25,6 +26,11 @@ function App() {
             <Route path="/forms/new" element={
               <div className="form-page-container">
                 <NuevoFormulario />
+              </div>
+            } />
+            <Route path="/registros" element={
+              <div className="registros-page-container">
+                <ListadoFormularios />
               </div>
             } />
           </Routes>
