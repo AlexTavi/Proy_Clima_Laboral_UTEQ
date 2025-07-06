@@ -12,6 +12,7 @@ const NuevoFormulario = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
   const adscripcionesDisponibles = ['Matriz', 'Sucursal', 'Norte', 'Sur', 'Noreste', 'Noroeste'];
@@ -60,7 +61,7 @@ const NuevoFormulario = () => {
       const token = localStorage.getItem('token');
       if (!token) return navigate('/login');
       try {
-        const res = await fetch('http://192.168.0.50/api/me', {
+        const res = await fetch(apiUrl+'api/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Token inválido');
@@ -79,7 +80,7 @@ const NuevoFormulario = () => {
   const cerrarSesion = async () => {
     const token = localStorage.getItem('token');
     try {
-      await fetch('http://192.168.0.50/api/logout', {
+      await fetch(apiUrl+'api/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -155,7 +156,7 @@ const NuevoFormulario = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
-      const res = await fetch('http://192.168.0.50/api/forms', {
+      const res = await fetch(apiUrl+'api/forms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

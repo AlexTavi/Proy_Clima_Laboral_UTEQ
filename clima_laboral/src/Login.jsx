@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   // ✅ Redirigir automáticamente si ya hay sesión
   useEffect(() => {
@@ -22,7 +23,8 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("http://192.168.0.50/api/login", {
+      console.log(apiUrl)
+      const res = await fetch(apiUrl+"api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +45,7 @@ export default function Login() {
         return;
       }
 
-      const meRes = await fetch("http://192.168.0.50/api/me", {
+      const meRes = await fetch(apiUrl+"api/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
           "Content-Type": "application/json",

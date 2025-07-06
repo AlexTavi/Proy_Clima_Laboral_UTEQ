@@ -8,6 +8,7 @@ const Inicio = () => {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const handleResize = () => {
@@ -29,7 +30,7 @@ const Inicio = () => {
       return;
     }
 
-    fetch('http://192.168.0.50/api/me', {
+    fetch(apiUrl+'api/me', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ const Inicio = () => {
   const cerrarSesion = () => {
     const token = localStorage.getItem('token');
 
-    fetch('http://192.168.0.50/api/logout', {
+    fetch(apiUrl+'api/logout', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

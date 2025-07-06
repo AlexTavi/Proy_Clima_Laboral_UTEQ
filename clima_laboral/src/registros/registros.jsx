@@ -9,6 +9,7 @@ const ListadoFormularios = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [usuario, setUsuario] = useState(null);
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   // Navbar links
   const navLinks = [
@@ -27,7 +28,7 @@ const ListadoFormularios = () => {
       const token = localStorage.getItem('token');
       if (!token) return navigate('/login');
       try {
-        const res = await fetch('http://192.168.0.50/api/me', {
+        const res = await fetch(apiUrl+'api/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Token inválido');
@@ -44,7 +45,7 @@ const ListadoFormularios = () => {
   const cerrarSesion = async () => {
     const token = localStorage.getItem('token');
     try {
-      await fetch('http://192.168.0.50/api/logout', {
+      await fetch(apiUrl+'api/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -77,7 +78,7 @@ const ListadoFormularios = () => {
         setError(null);
 
         const token = localStorage.getItem('token');
-        const response = await fetch('http://192.168.0.50/api/forms', {
+        const response = await fetch(apiUrl+'api/forms', {
           headers: {
             Authorization: `Bearer ${token}`
           }
