@@ -9,7 +9,6 @@ import {
   FaBars,
   FaSignInAlt,
 } from "react-icons/fa";
-import "./principal.css";
 
 const sections = [
   {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
+import "../App.scss";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 

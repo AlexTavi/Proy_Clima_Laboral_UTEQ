@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import './inicio.css';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Inicio = () => {

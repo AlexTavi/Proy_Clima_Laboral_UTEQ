@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import './form.css';
 
 const NuevoFormulario = () => {
   const navigate = useNavigate();
