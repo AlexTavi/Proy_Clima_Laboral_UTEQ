@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
-import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight} from "react-icons/fa";
+import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from './auth-context';
 
 import Principal from './paginas/principal.jsx';
 import Login from './paginas/Login.jsx';
@@ -22,6 +23,8 @@ function AppContent() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [toggled, setToggled] = useState(false);
+  const { user } = useAuth();
+  const { logout } = useAuth();
 
   const handleCollapsedChange = () => {
     setCollapsed(!collapsed);
@@ -86,7 +89,7 @@ function AppContent() {
               closeOnClick={true}
               transitionDuration={300}
               menuItemStyles={{
-                button: ({active})=> ({
+                button: ({active}) => ({
                   padding: '12px 24px',
                   margin: '4px 16px',
                   borderRadius: 8,
@@ -98,7 +101,7 @@ function AppContent() {
                     color: '#fff',
                   },
                 }),
-                icon: ({ active}) => ({
+                icon: ({active}) => ({
                   color: active ? '#fff' : '#4946a9',
                   marginRight: collapsed ? 0 : 12,
                   display: 'flex',
@@ -115,89 +118,116 @@ function AppContent() {
               }}
           >
             {/* Información/Inicio */}
-            <MenuItem
-                icon={<FaInfoCircle />}
-                component={<Link to="/" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/')}
-            >
-              Información
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaInfoCircle/>}
+                    component={<Link to="/" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/')}
+                >
+                  Información
+                </MenuItem>
+            )}
 
-            <MenuItem
-                icon={<FaCheck  />}
-                component={<Link to="/beneficios" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/beneficios')}
-            >
-              Beneficios
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaCheck/>}
+                    component={<Link to="/beneficios" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/beneficios')}
+                >
+                  Beneficios
+                </MenuItem>
+            )}
 
-            <MenuItem
-                icon={<FaHandHolding  />}
-                component={<Link to="/servicios" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/servicios')}
-            >
-              Servicios
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaHandHolding/>}
+                    component={<Link to="/servicios" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/servicios')}
+                >
+                  Servicios
+                </MenuItem>
+            )}
 
-            <MenuItem
-                icon={<FaProjectDiagram />}
-                component={<Link to="/proyectos" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/proyectos')}
-            >
-              Proyectos
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaProjectDiagram/>}
+                    component={<Link to="/proyectos" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/proyectos')}
+                >
+                  Proyectos
+                </MenuItem>
+            )}
 
-            <MenuItem
-                icon={<FaEnvelope />}
-                component={<Link to="/contacto" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/contacto')}
-            >
-              Contacto
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaEnvelope/>}
+                    component={<Link to="/contacto" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/contacto')}
+                >
+                  Contacto
+                </MenuItem>
+            )}
 
+            {user && (
+                <MenuItem
+                    icon={<FaCubes/>}
+                    component={<Link to="/inicio" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/inicio')}
+                >
+                  Dashboard
+                </MenuItem>
+            )}
+
+            {user && (
+                <SubMenu
+                    label="Formularios"
+                    icon={<FaList/>}
+                    defaultOpen={location.pathname.includes('/forms') || location.pathname.includes('/registros')}
+                >
+                  <MenuItem
+                      // icon={<FaPlus />}
+                      component={<Link to="/forms/new" onClick={() => handleToggleSidebar(false)}/>}
+                      active={isActiveRoute('/forms/new')}
+                  >
+                    <FaPlus size={16} style={{marginRight: 8}}/>
+                    Nuevo Formulario
+                  </MenuItem>
+                  <MenuItem
+                      // icon={<FaList />}
+                      component={<Link to="/registros" onClick={() => handleToggleSidebar(false)}/>}
+                      active={isActiveRoute('/registros')}
+                  >
+                    <FaList size={16} style={{marginRight: 8}}/>
+                    Ver Registro
+                  </MenuItem>
+                </SubMenu>
+            )}
             {/* Separador */}
-            <div className="sidebar-separator" />
+            <div className="sidebar-separator"/>
 
-            {/* Sección de autenticación */}
-            <MenuItem
-                icon={<FaSignInAlt />}
-                component={<Link to="/login" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/login')}
-            >
-              Iniciar Sesión
-            </MenuItem>
+            {!user && (
+                <MenuItem
+                    icon={<FaSignInAlt/>}
+                    component={<Link to="/login" onClick={() => handleToggleSidebar(false)}/>}
+                    active={isActiveRoute('/login')}
+                >
+                  Iniciar Sesión
+                </MenuItem>
+            )}
 
-            <MenuItem
-                icon={<FaCubes />}
-                component={<Link to="/inicio" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/inicio')}
-            >
-              Dashboard
-            </MenuItem>
+            {user && (
+              <div className="sidebar-btn-wrapper">
+                <button
+                    className="sidebar-btn"
+                    onClick={logout}
+                    title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+                >
+                  <FaSignOutAlt />
+                  {!collapsed && <span>Cerrar sesión</span>}
+                </button>
+              </div>
+            )}
 
-            {/* SubMenu de Formularios */}
-            <SubMenu
-                label="Formularios"
-                icon={<FaList />}
-                defaultOpen={location.pathname.includes('/forms') || location.pathname.includes('/registros')}
-            >
-              <MenuItem
-                  // icon={<FaPlus />}
-                  component={<Link to="/forms/new" onClick={() => handleToggleSidebar(false)} />}
-                  active={isActiveRoute('/forms/new')}
-              >
-                <FaPlus size={16} style={{ marginRight: 8 }} />
-                Nuevo Formulario
-              </MenuItem>
-              <MenuItem
-                  // icon={<FaList />}
-                  component={<Link to="/registros" onClick={() => handleToggleSidebar(false)} />}
-                  active={isActiveRoute('/registros')}
-              >
-                <FaList size={16} style={{ marginRight: 8 }} />
-                Ver Registro
-              </MenuItem>
-            </SubMenu>
           </Menu>
         </Sidebar>
 
@@ -207,7 +237,7 @@ function AppContent() {
               className={`btn-toggle ${toggled ? 'hidden' : ''}`}
               onClick={() => handleToggleSidebar(true)}
           >
-            <FaBars />
+            <FaBars/>
           </div>
 
           {/* Contenido principal */}

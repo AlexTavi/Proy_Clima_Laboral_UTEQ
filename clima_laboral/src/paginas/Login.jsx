@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../App.scss";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../auth-context';
+import { Toaster, toast } from 'react-hot-toast'
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,6 +11,7 @@ export default function Login() {
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
   const apiUrl = import.meta.env.VITE_BACKEND_URL;
+  const { login }  = useAuth();
 
   // ✅ Redirigir automáticamente si ya hay sesión
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function Login() {
       if (!res.ok) {
         const errData = await res.json();
         setError(errData.message || "Credenciales incorrectas");
+        toast.error("Contraseña incorrecta")
         return;
       }
 
@@ -59,13 +63,12 @@ export default function Login() {
 
       const meData = await meRes.json();
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(meData.user));
-
+      login(data.token, meData.user);
+      toast.success("Inicio de sesión exitoso")
       navigate("/inicio/");
     } catch (err) {
-      console.error(err);
-      setError("Error de conexión con el servidor");
+      toast.error("Credenciales incorrectasr")
+      console.error(err.message);
     }
   };
 
@@ -93,6 +96,7 @@ export default function Login() {
         </button>
         {error && <p className="error-text" style={{ color: "red" }}>{error}</p>}
       </form>
+      <Toaster position="top-right" />
     </div>
   );
 }
