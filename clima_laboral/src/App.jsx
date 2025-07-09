@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
 import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
@@ -17,6 +17,7 @@ import Proyectos from "./paginas/Proyectos.jsx";
 import Contacto from "./paginas/Contacto.jsx";
 import './App.scss';
 import logo from '../imagen.jpg';
+import Beneficios from "./paginas/Beneficios.jsx";
 
 // Componente interno para usar useLocation
 function AppContent() {
@@ -25,6 +26,7 @@ function AppContent() {
   const [toggled, setToggled] = useState(false);
   const { user } = useAuth();
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleCollapsedChange = () => {
     setCollapsed(!collapsed);
@@ -39,6 +41,10 @@ function AppContent() {
   const isActiveRoute = (path) => {
     return location.pathname === path;
   };
+    const handleLogout = () => {
+        logout();                 // limpia sesión
+        navigate('/', { replace: true }); // redirige
+    };
 
   return (
       <div className={`app ${toggled ? 'toggled' : ''}`}>
@@ -219,8 +225,8 @@ function AppContent() {
               <div className="sidebar-btn-wrapper">
                 <button
                     className="sidebar-btn"
-                    onClick={logout}
-                    title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+                    onClick={handleLogout}
+                    title={'Cerrar sesión'}
                 >
                   <FaSignOutAlt />
                   {!collapsed && <span>Cerrar sesión</span>}
@@ -245,7 +251,7 @@ function AppContent() {
             <div className="scrollable-content">
               <Routes>
                 <Route path="/" element={<Info />} />
-                <Route path="/beneficios" element={<Info />} />
+                <Route path="/beneficios" element={<Beneficios />} />
                 <Route path="/servicios" element={<Servicios />} />
                 <Route path="/proyectos" element={<Proyectos />} />
                 <Route path="/contacto" element={<Contacto />} />

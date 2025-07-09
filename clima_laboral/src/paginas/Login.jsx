@@ -67,7 +67,7 @@ export default function Login() {
       toast.success("Inicio de sesión exitoso")
       navigate("/inicio/");
     } catch (err) {
-      toast.error("Credenciales incorrectasr")
+      toast.error("Credenciales incorrectas")
       console.error(err.message);
     }
   };
