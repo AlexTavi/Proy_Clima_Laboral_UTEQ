@@ -42,7 +42,7 @@ function AppContent() {
         <Sidebar
             collapsed={collapsed}
             toggled={toggled}
-            width="220px"
+            width="240px"
             collapsedWidth="80px"
             backgroundColor="#eaebee"
             breakPoint="md"
@@ -99,9 +99,7 @@ function AppContent() {
                     color: '#fff',
                   },
                 }),
-                icon: ({ active, level }) => ({
-                  // level === 0 → ítem de primer nivel
-                  // level > 0  → submenú
+                icon: ({ active}) => ({
                   color: active ? '#fff' : '#4946a9',
                   marginRight: collapsed ? 0 : 12,
                   display: 'flex',
@@ -185,18 +183,20 @@ function AppContent() {
                 defaultOpen={location.pathname.includes('/forms') || location.pathname.includes('/registros')}
             >
               <MenuItem
-                  icon={<FaPlus />}
+                  // icon={<FaPlus />}
                   component={<Link to="/forms/new" onClick={() => handleToggleSidebar(false)} />}
                   active={isActiveRoute('/forms/new')}
               >
+                <FaPlus size={16} style={{ marginRight: 8 }} />
                 Nuevo Formulario
               </MenuItem>
               <MenuItem
-                  icon={<FaList />}
+                  // icon={<FaList />}
                   component={<Link to="/registros" onClick={() => handleToggleSidebar(false)} />}
                   active={isActiveRoute('/registros')}
               >
-                Ver Registros
+                <FaList size={16} style={{ marginRight: 8 }} />
+                Ver Registro
               </MenuItem>
             </SubMenu>
           </Menu>
