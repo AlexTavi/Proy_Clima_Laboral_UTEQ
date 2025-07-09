@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
-import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes  } from "react-icons/fa";
+import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight} from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 
 import Principal from './paginas/principal.jsx';
@@ -77,8 +77,7 @@ function AppContent() {
                 onClick={handleCollapsedChange}
                 title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
             >
-              <FaBars />
-              {!collapsed && <span>Colapsar</span>}
+              {collapsed ? <FaAngleDoubleRight /> : <FaAngleDoubleLeft />}
             </button>
           </div>
 
