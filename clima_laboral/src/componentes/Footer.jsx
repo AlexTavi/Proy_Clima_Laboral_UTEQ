@@ -12,13 +12,13 @@ function Footer() {
             <footer className="site-footer">
                 {/* Créditos */}
                 <small className="credit">
-                    <FaHeart className="heart" /> Hecho con cariño por&nbsp;
+                    <FaHeart className="heart" /> Hecho por&nbsp;
                     <a
                         href="https://granada.com.gt/es/"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        Grupo Crehce
+                        Grupo Crehce
                     </a>
                 </small>
 
