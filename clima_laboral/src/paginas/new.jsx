@@ -24,7 +24,7 @@ const NuevoFormulario = () => {
   const [success, setSuccess] = useState(null);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
-  const apiUrl = import.meta.env.VITE_BACKEND_URL;
+  const apiUrl = "https://api.grupocrehce.com/";
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
   const adscripcionesDisponibles = ['Matriz', 'Sucursal', 'Norte', 'Sur', 'Noreste', 'Noroeste'];

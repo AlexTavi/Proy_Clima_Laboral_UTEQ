@@ -2,23 +2,36 @@ import React, { useState, useEffect } from "react";
 import "../App.scss";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '../auth-context';
-import { Toaster, toast } from 'react-hot-toast'
+import { useAuth } from "../auth-context";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
-  const apiUrl = import.meta.env.VITE_BACKEND_URL;
-  const { login }  = useAuth();
+  const apiUrl = "https://api.grupocrehce.com/";
+  const { login } = useAuth();
 
-  // ✅ Redirigir automáticamente si ya hay sesión
+  // ✅ Redirigir automáticamente si ya hay sesión y el token es válido
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/inicio/");
-    }
+    if (!token) return;
+
+    fetch(apiUrl + "api/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.ok) {
+          navigate("/inicio");
+        } else {
+          localStorage.removeItem("token");
+        }
+      })
+      .catch(() => localStorage.removeItem("token"));
   }, [navigate]);
 
   const handleSubmit = async (e) => {
@@ -26,8 +39,8 @@ export default function Login() {
     setError("");
 
     try {
-      console.log(apiUrl)
-      const res = await fetch(apiUrl+"api/login", {
+      console.log("Intentando login con:", email);
+      const res = await fetch(apiUrl + "api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,18 +51,19 @@ export default function Login() {
       if (!res.ok) {
         const errData = await res.json();
         setError(errData.message || "Credenciales incorrectas");
-        toast.error("Contraseña incorrecta")
+        toast.error("Credenciales incorrectas");
         return;
       }
 
       const data = await res.json();
 
-      if (!data.token || !data.usuario) {
+      if (!data.token) {
         setError("Respuesta inválida del servidor");
+        toast.error("Respuesta inválida del servidor");
         return;
       }
 
-      const meRes = await fetch(apiUrl+"api/me", {
+      const meRes = await fetch(apiUrl + "api/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
           "Content-Type": "application/json",
@@ -58,17 +72,22 @@ export default function Login() {
 
       if (!meRes.ok) {
         setError("Token inválido o expirado");
+        toast.error("Token inválido o expirado");
         return;
       }
 
       const meData = await meRes.json();
 
+      // ✅ Guarda sesión antes de redirigir
       login(data.token, meData.user);
-      toast.success("Inicio de sesión exitoso")
-      navigate("/inicio/");
+      localStorage.setItem("token", data.token);
+
+      toast.success("Inicio de sesión exitoso");
+      console.log("Redirigiendo a /inicio");
+      navigate("/inicio");
     } catch (err) {
-      toast.error("Credenciales incorrectas")
-      console.error(err.message);
+      console.error("Error en login:", err.message);
+      toast.error("Error de conexión con el servidor");
     }
   };
 
@@ -78,7 +97,7 @@ export default function Login() {
       <form className="login-form" onSubmit={handleSubmit}>
         <input
           type="email"
-          placeholder="usuario o correo"
+          placeholder="Usuario o correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
