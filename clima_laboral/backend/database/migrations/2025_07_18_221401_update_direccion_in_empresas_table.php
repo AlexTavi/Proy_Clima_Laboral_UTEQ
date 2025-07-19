@@ -23,7 +23,7 @@ class UpdateDireccionInEmpresasTable extends Migration
     {
         Schema::table('empresas', function (Blueprint $table) {
             // Revertir los cambios: volver a agregar y eliminar según corresponda
-            $table->dropColumn(['direccion', 'num']);
+            $table->dropColumn(['direccion', 'num', 'empleados']);
             $table->string('calle')->nullable();
             $table->string('num_ext')->nullable();
             $table->string('num_int')->nullable();
