@@ -1,7 +1,7 @@
 import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
-import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaBuilding, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
 
@@ -47,6 +47,7 @@ function AppContent() {
     };
 
   return (
+
       <div className={`app ${toggled ? 'toggled' : ''}`}>
         <Sidebar
             collapsed={collapsed}
@@ -186,8 +187,8 @@ function AppContent() {
 
             {user && (
                 <SubMenu
-                    label="Formularios"
-                    icon={<FaList/>}
+                    label="Empresas"
+                    icon={<FaBuilding/>}
                     defaultOpen={location.pathname.includes('/forms') || location.pathname.includes('/registros')}
                 >
                   <MenuItem
@@ -196,7 +197,7 @@ function AppContent() {
                       active={isActiveRoute('/forms/new')}
                   >
                     <FaPlus size={16} style={{marginRight: 8}}/>
-                    Nuevo Formulario
+                    Nueva Empresa
                   </MenuItem>
                   <MenuItem
                       // icon={<FaList />}
@@ -204,7 +205,7 @@ function AppContent() {
                       active={isActiveRoute('/registros')}
                   >
                     <FaList size={16} style={{marginRight: 8}}/>
-                    Ver Registro
+                    Ver Empresas
                   </MenuItem>
                 </SubMenu>
             )}
@@ -279,7 +280,7 @@ function AppContent() {
             </div>
           </div>
 
-          <Footer />
+            {!user && (<Footer />)}
         </main>
       </div>
   );

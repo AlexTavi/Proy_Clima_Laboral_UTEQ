@@ -1,14 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import GlassCard from '../componentes/GlassCard.jsx';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  RadioGroup,
+  Radio,
+  Box,
+  Typography,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Checkbox,
+  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip
+} from "@mui/material";
+
 
 const NuevoFormulario = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
   const apiUrl = import.meta.env.VITE_BACKEND_URL;
@@ -24,7 +38,13 @@ const NuevoFormulario = () => {
   const [newQuestionType, setNewQuestionType] = useState('open');
 
   const [formData, setFormData] = useState({
-    nombreEmpresa: '',
+    nom_empresa: '',
+    rfc_empresa: '',
+    direccion: '',
+    cp: '',
+    municipio: '',
+    estado: '',
+    email_empresa: '',
     giro: '',
     subGiro: '',
     otroGiro: '',
@@ -44,16 +64,6 @@ const NuevoFormulario = () => {
     'Comercio': ['Tienda autoservicio', 'Tienda conveniencia', 'Tienda departamental'],
     'Otros': [],
   };
-
-  const navLinks = [
-    { path: "/forms/new", label: "Nuevo Formulario" },
-    { path: "/forms", label: "Formularios" },
-    { path: "/registros", label: "Registros" },
-    { path: "/dashboards", label: "Dashboards" },
-  ].map(link => ({
-    ...link,
-    active: location.pathname === link.path
-  }));
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -76,18 +86,6 @@ const NuevoFormulario = () => {
     fetchUserData();
   }, [navigate]);
 
-  const cerrarSesion = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      await fetch(apiUrl+'api/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } finally {
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -120,10 +118,10 @@ const NuevoFormulario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const hasEmptyQuestions = additionalQuestions.some(q => 
+    const hasEmptyQuestions = additionalQuestions.some(q =>
       !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
     );
-    
+
     if (hasEmptyQuestions) {
       setError('Por favor complete todas las preguntas adicionales');
       return;
@@ -175,11 +173,12 @@ const NuevoFormulario = () => {
         const errorData = await res.json();
         throw new Error(errorData.message || 'Error al guardar el formulario');
       }
-      
+
       setSuccess("Formulario guardado con éxito.");
       setTimeout(() => setSuccess(null), 3000);
       setFormData({
-        nombreEmpresa: '',
+        nom_empresa: '',
+        rfc_empresa: '',
         giro: '',
         subGiro: '',
         otroGiro: '',
@@ -205,68 +204,6 @@ const NuevoFormulario = () => {
 
   return (
     <div className="formulario-container">
-      <header className="navbar">
-        <div className="navbar-top">
-          <div className="logo">RH</div>
-          <nav className="desktop-nav-links">
-            {navLinks.map(link => (
-              <Link 
-                key={link.path} 
-                to={link.path} 
-                className={`nav-link ${link.active ? 'active' : ''}`}
-                aria-current={link.active ? 'page' : undefined}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="desktop-profile-section">
-            <div className="profile-icon">👤 {usuario?.nombre}</div>
-            <button 
-              onClick={cerrarSesion} 
-              className="logout-button"
-              aria-label="Cerrar sesión"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-          <button 
-            className="hamburger-button" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-expanded={isMenuOpen}
-            aria-label="Menú de navegación"
-          >
-            <div className="hamburger-line"></div>
-            <div className="hamburger-line"></div>
-            <div className="hamburger-line"></div>
-          </button>
-        </div>
-        <div className={`nav-container ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="mobile-nav-links">
-            {navLinks.map(link => (
-              <Link 
-                key={link.path}
-                to={link.path} 
-                className={`nav-link ${link.active ? 'active' : ''}`} 
-                onClick={() => setIsMenuOpen(false)}
-                aria-current={link.active ? 'page' : undefined}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="profile-section">
-            <div className="profile-icon">👤 {usuario?.nombre}</div>
-            <button 
-              onClick={cerrarSesion} 
-              className="logout-button"
-              aria-label="Cerrar sesión"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </header>
 
       {error && (
         <div className="error-message" role="alert">
@@ -280,489 +217,846 @@ const NuevoFormulario = () => {
       )}
 
       <main className="formulario-main">
-        <h1 className="form-title">Nuevo Formulario</h1>
+        <h1 className="form-title">Nueva Empresa</h1>
         <form onSubmit={handleSubmit} className="form-grid">
-          <section className="form-section">
-            <h2 className="section-title">Información de la Empresa</h2>
-
-            <div className="form-group">
-              <label htmlFor="nombreEmpresa" className="form-label">Nombre de la empresa</label>
-              <input 
-                id="nombreEmpresa"
-                name="nombreEmpresa" 
-                value={formData.nombreEmpresa} 
-                onChange={handleChange} 
-                className="form-input"
-                required 
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="giro" className="form-label">Catálogo de giros</label>
-              <select 
-                id="giro"
-                name="giro" 
-                value={formData.giro} 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setFormData(prev => ({ ...prev, giro: val, subGiro: '', otroGiro: '' }));
-                }} 
-                className="form-select"
-                required
-              >
-                <option value="">-- Selecciona un giro --</option>
-                {Object.keys(girosCatalogo).map(giro => (
-                  <option key={giro} value={giro}>{giro}</option>
-                ))}
-              </select>
-            </div>
-
-            {girosCatalogo[formData.giro]?.length > 0 && (
-              <div className="form-group">
-                <label htmlFor="subGiro" className="form-label">Subcategoría</label>
-                <select 
-                  id="subGiro"
-                  name="subGiro" 
-                  value={formData.subGiro} 
-                  onChange={handleChange} 
-                  className="form-select"
+          <GlassCard>
+            <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
+              Información de la Empresa
+            </Typography>
+            <Box component="form" display="flex" flexDirection="column" gap={3}>
+              <TextField
+                  id="nom_empresa"
+                  name="nom_empresa"
+                  label="Nombre de la empresa"
+                  variant="outlined"
+                  fullWidth
                   required
-                >
-                  <option value="">-- Selecciona una subcategoría --</option>
-                  {girosCatalogo[formData.giro].map(sub => (
-                    <option key={sub} value={sub}>{sub}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {formData.giro === 'Otros' && (
-              <div className="form-group">
-                <label htmlFor="otroGiro" className="form-label">Especifique el giro</label>
-                <input 
-                  id="otroGiro"
-                  name="otroGiro" 
-                  value={formData.otroGiro} 
-                  onChange={handleChange} 
-                  className="form-input"
-                  required 
-                />
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="empleadosSeleccion" className="form-label">Número de empleados</label>
-              <select
-                id="empleadosSeleccion"
-                name="empleadosSeleccion"
-                value={empleadosSeleccion}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setEmpleadosSeleccion(value);
-                  if (value !== "Otros") {
-                    setFormData(prev => ({ ...prev, empleados: value }));
-                  } else {
-                    setFormData(prev => ({ ...prev, empleados: "" }));
-                  }
-                }}
-                className="form-select"
-                required
-              >
-                <option value="">-- Selecciona un rango --</option>
-                <option value="10-50">De 10 a 50</option>
-                <option value="51-100">De 51 a 100</option>
-                <option value="101-200">De 101 a 200</option>
-                <option value="201-300">De 201 a 300</option>
-                <option value="301-400">De 301 a 400</option>
-                <option value="401-500">De 401 a 500</option>
-                <option value="501-1000">De 501 a 1000</option>
-                <option value="Otros">Otros</option>
-              </select>
-            </div>
-
-            {empleadosSeleccion === "Otros" && (
-              <div className="form-group">
-                <label htmlFor="empleados" className="form-label">Especifique el número de empleados</label>
-                <input
-                  id="empleados"
-                  type="number"
-                  name="empleados"
-                  value={formData.empleados}
+                  value={formData.nom_empresa}
                   onChange={handleChange}
-                  className="form-input"
-                  min="1"
-                  required
-                />
-              </div>
-            )}
-          </section>
-
-          <section className="form-section">
-            <h2 className="section-title">Información de Contacto</h2>
-            <div className="form-group">
-              <label htmlFor="domicilio" className="form-label">Domicilio</label>
-              <input 
-                id="domicilio"
-                name="domicilio" 
-                value={formData.domicilio} 
-                onChange={handleChange} 
-                className="form-input"
-                required 
               />
-            </div>
-            <div className="form-group">
-              <label htmlFor="telefono" className="form-label">Teléfono</label>
-              <input 
-                id="telefono"
-                name="telefono" 
-                value={formData.telefono} 
-                onChange={handleChange} 
-                className="form-input"
-                required 
+
+              <TextField
+                  id="rfc_empresa"
+                  name="rfc_empresa"
+                  label="RFC de la empresa"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.rfc_empresa}
+                  onChange={handleChange}
               />
-            </div>
-            <div className="form-group">
-              <label htmlFor="responsable" className="form-label">Responsable</label>
-              <input 
-                id="responsable"
-                name="responsable" 
-                value={formData.responsable} 
-                onChange={handleChange} 
-                className="form-input"
-                required 
-              />
-            </div>
-          </section>
 
-          <section className="form-section">
-            <h2 className="section-title">Estructura Organizacional</h2>
-            <p className="section-description">Niveles de puestos y número de ocupantes:</p>
-            <div className="checkbox-container">
-              {nivelesPuestos.map((puesto) => (
-                <div key={puesto} className="checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      id={`puesto-${puesto}`}
-                      checked={puestosSeleccionados.includes(puesto)}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setPuestosSeleccionados(prev =>
-                          checked ? [...prev, puesto] : prev.filter(p => p !== puesto)
-                        );
-                      }}
-                      className="checkbox-input"
-                    />
-                    <span className="checkbox-custom"></span>
-                    {puesto}
-                  </label>
-                  {puestosSeleccionados.includes(puesto) && (
-                    <input
-                      type="number"
-                      name={puesto.toLowerCase()}
-                      value={formData.estructura[puesto.toLowerCase()] || 0}
-                      onChange={handleEstructuraChange}
-                      className="form-input number-input"
-                      min="0"
-                      placeholder={`Nº de ${puesto}`}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {puestosExtra.map((puesto, idx) => (
-              <div key={`puesto-extra-${idx}`} className="form-group extra-input-group">
-                <input
-                  type="text"
-                  value={puesto.nombre}
-                  onChange={(e) => {
-                    const nuevoNombre = e.target.value;
-                    setPuestosExtra(prev => {
-                      const copy = [...prev];
-                      copy[idx].nombre = nuevoNombre;
-                      return copy;
-                    });
-                  }}
-                  className="form-input"
-                  placeholder="Nombre del puesto adicional"
-                  aria-label="Nombre del puesto adicional"
-                />
-                <input
-                  type="number"
-                  value={puesto.numero}
-                  onChange={(e) => {
-                    const numero = parseInt(e.target.value) || 0;
-                    setPuestosExtra(prev => {
-                      const copy = [...prev];
-                      copy[idx].numero = numero;
-                      return copy;
-                    });
-                  }}
-                  className="form-input number-input"
-                  min="0"
-                  placeholder="Nº ocupantes"
-                  aria-label="Número de ocupantes"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPuestosExtra(prev => prev.filter((_, i) => i !== idx));
-                  }}
-                  className="remove-button"
-                  aria-label="Eliminar puesto"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-
-            <button 
-              type="button" 
-              onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}
-              className="add-button"
-            >
-              + Agregar otro puesto
-            </button>
-          </section>
-
-          <section className="form-section">
-            <h2 className="section-title">Adscripciones</h2>
-            <div className="checkbox-container">
-              {adscripcionesDisponibles.map((ads) => (
-                <div key={ads} className="checkbox-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      id={`ads-${ads}`}
-                      checked={adscripcionesSeleccionadas.includes(ads)}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setAdscripcionesSeleccionadas(prev =>
-                          checked ? [...prev, ads] : prev.filter(a => a !== ads)
-                        );
-                      }}
-                      className="checkbox-input"
-                    />
-                    <span className="checkbox-custom"></span>
-                    {ads}
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            {adscripcionesExtra.map((ads, idx) => (
-              <div key={`ads-extra-${idx}`} className="form-group extra-input-group">
-                <input
-                  type="text"
-                  value={ads}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setAdscripcionesExtra(prev => {
-                      const copy = [...prev];
-                      copy[idx] = val;
-                      return copy;
-                    });
-                  }}
-                  className="form-input"
-                  placeholder="Adscripción adicional"
-                  aria-label="Adscripción adicional"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdscripcionesExtra(prev => prev.filter((_, i) => i !== idx));
-                  }}
-                  className="remove-button"
-                  aria-label="Eliminar adscripción"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-
-            <button 
-              type="button" 
-              onClick={() => setAdscripcionesExtra([...adscripcionesExtra, ''])}
-              className="add-button"
-            >
-              + Agregar otra adscripción
-            </button>
-          </section>
-
-          <section className="form-section">
-            <h2 className="section-title">Preguntas opcionales</h2>
-            
-            {additionalQuestions.map((question, index) => (
-              <div key={index} className="question-group">
-                <div className="question-header">
-                  <span className="question-type-badge">
-                    {question.type === 'open' && 'Abierta'}
-                    {question.type === 'closed' && 'Cerrada (Sí/No)'}
-                    {question.type === 'multiple' && 'Opción múltiple'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAdditionalQuestions(prev => prev.filter((_, i) => i !== index));
-                      const newAnswers = {...answers};
-                      delete newAnswers[index];
-                      setAnswers(newAnswers);
-                    }}
-                    className="remove-button"
-                    aria-label="Eliminar pregunta"
-                  >
-                    ×
-                  </button>
-                </div>
-                
-                <div className="form-group">
-                  <input
-                    type="text"
-                    value={question.text}
+              <FormControl fullWidth required>
+                <InputLabel id="giro-label">Catálogo de giros</InputLabel>
+                <Select
+                    labelId="giro-label"
+                    id="giro"
+                    name="giro"
+                    value={formData.giro}
+                    label="Catálogo de giros"
                     onChange={(e) => {
-                      const updatedQuestions = [...additionalQuestions];
-                      updatedQuestions[index].text = e.target.value;
-                      setAdditionalQuestions(updatedQuestions);
+                      const val = e.target.value;
+                      setFormData(prev => ({ ...prev, giro: val, subGiro: '', otroGiro: '' }));
                     }}
-                    className="form-input"
-                    placeholder="Escriba la pregunta"
-                    required
-                  />
-                </div>
-                
-                <div className="answer-section">
-                  {question.type === 'open' && (
-                    <input
-                      type="text"
-                      value={answers[index]?.answer || ''}
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      className="form-input"
-                      placeholder="Escriba su respuesta"
-                      required
-                    />
-                  )}
-                  
-                  {question.type === 'closed' && (
-                    <div className="closed-options">
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name={`closed-${index}`}
-                          checked={answers[index]?.answer === 'Sí'}
-                          onChange={() => handleAnswerChange(index, 'Sí')}
-                          className="radio-input"
-                        />
-                        <span className="radio-custom"></span>
-                        Sí
-                      </label>
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name={`closed-${index}`}
-                          checked={answers[index]?.answer === 'No'}
-                          onChange={() => handleAnswerChange(index, 'No')}
-                          className="radio-input"
-                        />
-                        <span className="radio-custom"></span>
-                        No
-                      </label>
-                    </div>
-                  )}
-                  
-                  {question.type === 'multiple' && (
-                    <div className="multiple-options">
-                      {question.options.map((option, optIndex) => (
-                        <label key={optIndex} className="radio-label">
-                          <input
-                            type="radio"
-                            name={`multiple-${index}`}
-                            checked={answers[index]?.selectedOption === option}
-                            onChange={() => handleOptionSelect(index, option)}
-                            className="radio-input"
-                          />
-                          <span className="radio-custom"></span>
-                          {option}
-                        </label>
+                >
+                  <MenuItem value="">
+                    -- Selecciona un giro --
+                  </MenuItem>
+                  {Object.keys(girosCatalogo).map(giro => (
+                      <MenuItem key={giro} value={giro}>
+                        {giro}
+                      </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {girosCatalogo[formData.giro]?.length > 0 && (
+                  <FormControl fullWidth required margin="normal">
+                    <InputLabel id="subGiro-label">Subcategoría</InputLabel>
+                    <Select
+                        labelId="subGiro-label"
+                        id="subGiro"
+                        name="subGiro"
+                        value={formData.subGiro}
+                        label="Subcategoría"
+                        onChange={handleChange}
+                    >
+                      <MenuItem value="">-- Selecciona una subcategoría --</MenuItem>
+                      {girosCatalogo[formData.giro].map(sub => (
+                          <MenuItem key={sub} value={sub}>{sub}</MenuItem>
                       ))}
-                    </div>
-                  )}
-                </div>
-                
-                {question.type === 'multiple' && (
-                  <div className="options-container">
-                    {question.options.map((option, optIndex) => (
-                      <div key={optIndex} className="option-input-group">
-                        <input
-                          type="text"
-                          value={option}
-                          onChange={(e) => {
-                            const updatedQuestions = [...additionalQuestions];
-                            updatedQuestions[index].options[optIndex] = e.target.value;
-                            setAdditionalQuestions(updatedQuestions);
-                          }}
-                          className="form-input"
-                          placeholder={`Opción ${optIndex + 1}`}
-                          required
+                    </Select>
+                  </FormControl>
+              )}
+
+              {formData.giro === 'Otros' && (
+                  <TextField
+                      id="otroGiro"
+                      name="otroGiro"
+                      label="Especifique el giro"
+                      value={formData.otroGiro}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                      margin="normal"
+                  />
+              )}
+
+
+              <FormControl fullWidth required margin="normal">
+                <InputLabel id="empleadosSeleccion-label">Número de empleados</InputLabel>
+                <Select
+                    labelId="empleadosSeleccion-label"
+                    id="empleadosSeleccion"
+                    name="empleadosSeleccion"
+                    value={empleadosSeleccion}
+                    label="Número de empleados"
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEmpleadosSeleccion(value);
+                      if (value !== "Otros") {
+                        setFormData(prev => ({ ...prev, empleados: value }));
+                      } else {
+                        setFormData(prev => ({ ...prev, empleados: "" }));
+                      }
+                    }}
+                >
+                  <MenuItem value="">-- Selecciona un rango --</MenuItem>
+                  <MenuItem value="10-50">De 10 a 50</MenuItem>
+                  <MenuItem value="51-100">De 51 a 100</MenuItem>
+                  <MenuItem value="101-200">De 101 a 200</MenuItem>
+                  <MenuItem value="201-300">De 201 a 300</MenuItem>
+                  <MenuItem value="301-400">De 301 a 400</MenuItem>
+                  <MenuItem value="401-500">De 401 a 500</MenuItem>
+                  <MenuItem value="501-1000">De 501 a 1000</MenuItem>
+                  <MenuItem value="Otros">Otros</MenuItem>
+                </Select>
+              </FormControl>
+
+
+              {empleadosSeleccion === "Otros" && (
+                  <TextField
+                      id="empleados"
+                      type="number"
+                      name="empleados"
+                      label="Especifique el número de empleados"
+                      value={formData.empleados}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                      margin="normal"
+                      inputProps={{ min: 1 }}
+                  />
+              )}
+
+            </Box>
+          </GlassCard>
+
+          <GlassCard>
+            <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
+              Información de Contacto
+            </Typography>
+            <Box component="form" display="flex" flexDirection="column" gap={3}>
+              <TextField
+                  id="telefono"
+                  name="telefono"
+                  label="Telefono"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.telefono}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="email_empresa"
+                  name="email_empresa"
+                  label="Email de la empresa"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.email_empresa}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="responsable"
+                  name="responsable"
+                  label="Responsable"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.responsable}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="direccion"
+                  name="direccion"
+                  label="Domicilio"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.direccion}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="cp"
+                  name="cp"
+                  label="Código postal"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.cp}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="estado"
+                  name="estado"
+                  label="Estado"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.cp}
+                  onChange={handleChange}
+              />
+              <TextField
+                  id="municipio"
+                  name="municipio"
+                  label="Municipio"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.cp}
+                  onChange={handleChange}
+              />
+            </Box>
+          </GlassCard>
+
+          <GlassCard>
+            <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
+              Estructura Organizacional
+            </Typography>
+            <Box component="form" display="flex" flexDirection="column" gap={3}>
+              <Typography variant="body1" color="text.secondary">
+                Niveles de puestos y número de ocupantes:
+              </Typography>
+              <FormGroup>
+                {nivelesPuestos.map((puesto) => (
+                    <Stack key={puesto} direction="row" alignItems="center" spacing={2} mb={1}>
+                      <FormControlLabel
+                          control={
+                            <Checkbox
+                                checked={puestosSeleccionados.includes(puesto)}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setPuestosSeleccionados(prev =>
+                                      checked
+                                          ? [...prev, puesto]
+                                          : prev.filter(p => p !== puesto)
+                                  );
+                                }}
+                            />
+                          }
+                          label={puesto}
+                      />
+                      {puestosSeleccionados.includes(puesto) && (
+                          <TextField
+                              type="number"
+                              name={puesto.toLowerCase()}
+                              value={formData.estructura[puesto.toLowerCase()] || 0}
+                              onChange={handleEstructuraChange}
+                              label={`Nº de ${puesto}`}
+                              size="small"
+                              inputProps={{ min: 0 }}
+                              sx={{ maxWidth: 120 }}
+                          />
+                      )}
+                    </Stack>
+                ))}
+              </FormGroup>
+              {puestosExtra.map((puesto, idx) => (
+                  <Stack key={`puesto-extra-${idx}`} direction="row" alignItems="center" spacing={2} mb={1}>
+                    <TextField
+                        value={puesto.nombre}
+                        onChange={(e) => {
+                          const nuevoNombre = e.target.value;
+                          setPuestosExtra(prev => {
+                            const copy = [...prev];
+                            copy[idx].nombre = nuevoNombre;
+                            return copy;
+                          });
+                        }}
+                        placeholder="Nombre"
+                        aria-label="Nombre del puesto adicional"
+                        size="small"
+                        sx={{ flex: 1 }}
+                    />
+                    <TextField
+                        type="number"
+                        value={puesto.numero}
+                        onChange={(e) => {
+                          const numero = parseInt(e.target.value) || 0;
+                          setPuestosExtra(prev => {
+                            const copy = [...prev];
+                            copy[idx].numero = numero;
+                            return copy;
+                          });
+                        }}
+                        placeholder="Nº ocupantes"
+                        aria-label="Número de ocupantes"
+                        size="small"
+                        inputProps={{ min: 0 }}
+                        sx={{ width: 130 }}
+                    />
+                    <IconButton
+                        onClick={() => {
+                          setPuestosExtra(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        aria-label="Eliminar puesto"
+                        color="error"
+                        size="small"
+                    >
+                      <DeleteIcon/>
+                    </IconButton>
+                  </Stack>
+              ))}
+              <Button
+                  variant="outlined"
+                  onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}
+                  startIcon={<span style={{ fontWeight: "bold" }}>+</span>}
+                  sx={{ alignSelf: "flex-start" }}
+              >
+                Agregar otro puesto
+              </Button>
+
+              {/*{puestosExtra.map((puesto, idx) => (*/}
+              {/*  <div key={`puesto-extra-${idx}`} className="form-group extra-input-group">*/}
+              {/*    <input*/}
+              {/*      type="text"*/}
+              {/*      value={puesto.nombre}*/}
+              {/*      onChange={(e) => {*/}
+              {/*        const nuevoNombre = e.target.value;*/}
+              {/*        setPuestosExtra(prev => {*/}
+              {/*          const copy = [...prev];*/}
+              {/*          copy[idx].nombre = nuevoNombre;*/}
+              {/*          return copy;*/}
+              {/*        });*/}
+              {/*      }}*/}
+              {/*      className="form-input"*/}
+              {/*      placeholder="Nombre del puesto adicional"*/}
+              {/*      aria-label="Nombre del puesto adicional"*/}
+              {/*    />*/}
+              {/*    <input*/}
+              {/*      type="number"*/}
+              {/*      value={puesto.numero}*/}
+              {/*      onChange={(e) => {*/}
+              {/*        const numero = parseInt(e.target.value) || 0;*/}
+              {/*        setPuestosExtra(prev => {*/}
+              {/*          const copy = [...prev];*/}
+              {/*          copy[idx].numero = numero;*/}
+              {/*          return copy;*/}
+              {/*        });*/}
+              {/*      }}*/}
+              {/*      className="form-input number-input"*/}
+              {/*      min="0"*/}
+              {/*      placeholder="Nº ocupantes"*/}
+              {/*      aria-label="Número de ocupantes"*/}
+              {/*    />*/}
+              {/*    <button*/}
+              {/*      type="button"*/}
+              {/*      onClick={() => {*/}
+              {/*        setPuestosExtra(prev => prev.filter((_, i) => i !== idx));*/}
+              {/*      }}*/}
+              {/*      className="remove-button"*/}
+              {/*      aria-label="Eliminar puesto"*/}
+              {/*    >*/}
+              {/*      ×*/}
+              {/*    </button>*/}
+              {/*  </div>*/}
+              {/*))}*/}
+
+              {/*<button*/}
+              {/*  type="button"*/}
+              {/*  onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}*/}
+              {/*  className="add-button"*/}
+              {/*>*/}
+              {/*  + Agregar otro puesto*/}
+              {/*</button>*/}
+            </Box>
+          </GlassCard>
+
+          <GlassCard>
+            <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
+              Adscripciones de la empresa
+            </Typography>
+            <Box component="form" display="flex" flexDirection="column" gap={3}>
+              <FormGroup>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>Adscripciones:</Typography>
+                <Stack spacing={1}>
+                  {adscripcionesDisponibles.map((ads) => (
+                      <Stack key={ads} direction="row" alignItems="center" spacing={2}>
+                        <FormControlLabel
+                            control={
+                              <Checkbox
+                                  checked={adscripcionesSeleccionadas.includes(ads)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setAdscripcionesSeleccionadas(prev =>
+                                        checked
+                                            ? [...prev, ads]
+                                            : prev.filter(a => a !== ads)
+                                    );
+                                  }}
+                              />
+                            }
+                            label={ads}
                         />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updatedQuestions = [...additionalQuestions];
-                            updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
-                            setAdditionalQuestions(updatedQuestions);
+                      </Stack>
+                  ))}
+                </Stack>
+              </FormGroup>
+
+              {/* Adscripciones extra */}
+              <Stack spacing={1} sx={{ mt: 2 }}>
+                {adscripcionesExtra.map((ads, idx) => (
+                    <Stack key={`ads-extra-${idx}`} direction="row" alignItems="center" spacing={2}>
+                      <TextField
+                          value={ads}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setAdscripcionesExtra(prev => {
+                              const copy = [...prev];
+                              copy[idx] = val;
+                              return copy;
+                            });
                           }}
-                          className="remove-button small"
-                          aria-label="Eliminar opción"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    
-                    <button
-                      type="button"
-                      onClick={() => {
+                          placeholder="Adscripción adicional"
+                          aria-label="Adscripción adicional"
+                          size="small"
+                          sx={{ flex: 1 }}
+                      />
+                      <IconButton
+                          onClick={() => {
+                            setAdscripcionesExtra(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          aria-label="Eliminar adscripción"
+                          color="error"
+                          size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
+                ))}
+              </Stack>
+
+              {/* Botón para agregar nueva adscripción */}
+              <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => setAdscripcionesExtra([...adscripcionesExtra, ""])}
+                  startIcon={<span style={{ fontWeight: "bold" }}>+</span>}
+                  sx={{ mt: 2, alignSelf: "flex-start" }}
+              >
+                Agregar otra adscripción
+              </Button>
+              {/*<div className="checkbox-container">*/}
+              {/*  {adscripcionesDisponibles.map((ads) => (*/}
+              {/*    <div key={ads} className="checkbox-group">*/}
+              {/*      <label className="checkbox-label">*/}
+              {/*        <input*/}
+              {/*          type="checkbox"*/}
+              {/*          id={`ads-${ads}`}*/}
+              {/*          checked={adscripcionesSeleccionadas.includes(ads)}*/}
+              {/*          onChange={(e) => {*/}
+              {/*            const checked = e.target.checked;*/}
+              {/*            setAdscripcionesSeleccionadas(prev =>*/}
+              {/*              checked ? [...prev, ads] : prev.filter(a => a !== ads)*/}
+              {/*            );*/}
+              {/*          }}*/}
+              {/*          className="checkbox-input"*/}
+              {/*        />*/}
+              {/*        <span className="checkbox-custom"></span>*/}
+              {/*        {ads}*/}
+              {/*      </label>*/}
+              {/*    </div>*/}
+              {/*  ))}*/}
+              {/*</div>*/}
+
+              {/*{adscripcionesExtra.map((ads, idx) => (*/}
+              {/*  <div key={`ads-extra-${idx}`} className="form-group extra-input-group">*/}
+              {/*    <input*/}
+              {/*      type="text"*/}
+              {/*      value={ads}*/}
+              {/*      onChange={(e) => {*/}
+              {/*        const val = e.target.value;*/}
+              {/*        setAdscripcionesExtra(prev => {*/}
+              {/*          const copy = [...prev];*/}
+              {/*          copy[idx] = val;*/}
+              {/*          return copy;*/}
+              {/*        });*/}
+              {/*      }}*/}
+              {/*      className="form-input"*/}
+              {/*      placeholder="Adscripción adicional"*/}
+              {/*      aria-label="Adscripción adicional"*/}
+              {/*    />*/}
+              {/*    <button*/}
+              {/*      type="button"*/}
+              {/*      onClick={() => {*/}
+              {/*        setAdscripcionesExtra(prev => prev.filter((_, i) => i !== idx));*/}
+              {/*      }}*/}
+              {/*      className="remove-button"*/}
+              {/*      aria-label="Eliminar adscripción"*/}
+              {/*    >*/}
+              {/*      ×*/}
+              {/*    </button>*/}
+              {/*  </div>*/}
+              {/*))}*/}
+
+              {/*<button*/}
+              {/*  type="button"*/}
+              {/*  onClick={() => setAdscripcionesExtra([...adscripcionesExtra, ''])}*/}
+              {/*  className="add-button"*/}
+              {/*>*/}
+              {/*  + Agregar otra adscripción*/}
+              {/*</button>*/}
+            </Box>
+          </GlassCard>
+
+          <GlassCard>
+            <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
+              Preguntas opcionales
+            </Typography>
+            <Box component="form" display="flex" flexDirection="column" gap={3}>
+
+              {additionalQuestions.map((question, index) => (
+                <box key={index} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2, mb: 3 }}>
+                  {/*<div className="question-header">*/}
+                  {/*  <span className="question-type-badge">*/}
+                  {/*    {question.type === 'open' && 'Abierta'}*/}
+                  {/*    {question.type === 'closed' && 'Cerrada (Sí/No)'}*/}
+                  {/*    {question.type === 'multiple' && 'Opción múltiple'}*/}
+                  {/*  </span>*/}
+                  {/*  <button*/}
+                  {/*    type="button"*/}
+                  {/*    onClick={() => {*/}
+                  {/*      setAdditionalQuestions(prev => prev.filter((_, i) => i !== index));*/}
+                  {/*      const newAnswers = {...answers};*/}
+                  {/*      delete newAnswers[index];*/}
+                  {/*      setAnswers(newAnswers);*/}
+                  {/*    }}*/}
+                  {/*    className="remove-button"*/}
+                  {/*    aria-label="Eliminar pregunta"*/}
+                  {/*  >*/}
+                  {/*    ×*/}
+                  {/*  </button>*/}
+                  {/*</div>*/}
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+                    <Chip
+                        label={
+                          question.type === "open"
+                              ? "Abierta"
+                              : question.type === "closed"
+                                  ? "Cerrada (Sí/No)"
+                                  : "Opción múltiple"
+                        }
+                        color={
+                          question.type === "open"
+                              ? "primary"
+                              : question.type === "closed"
+                                  ? "secondary"
+                                  : "info"
+                        }
+                        size="small"
+                    />
+                    <IconButton
+                        onClick={() => {
+                          setAdditionalQuestions(prev => prev.filter((_, i) => i !== index));
+                          const newAnswers = { ...answers };
+                          delete newAnswers[index];
+                          setAnswers(newAnswers);
+                        }}
+                        aria-label="Eliminar pregunta"
+                        color="error"
+                        size="small"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Stack>
+
+                  {/*<div className="form-group">*/}
+                  {/*  <input*/}
+                  {/*    type="text"*/}
+                  {/*    value={question.text}*/}
+                  {/*    onChange={(e) => {*/}
+                  {/*      const updatedQuestions = [...additionalQuestions];*/}
+                  {/*      updatedQuestions[index].text = e.target.value;*/}
+                  {/*      setAdditionalQuestions(updatedQuestions);*/}
+                  {/*    }}*/}
+                  {/*    className="form-input"*/}
+                  {/*    placeholder="Escriba la pregunta"*/}
+                  {/*    required*/}
+                  {/*  />*/}
+                  {/*</div>*/}
+                  <TextField
+                      value={question.text}
+                      onChange={(e) => {
                         const updatedQuestions = [...additionalQuestions];
-                        updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
+                        updatedQuestions[index].text = e.target.value;
                         setAdditionalQuestions(updatedQuestions);
                       }}
-                      className="add-button small"
-                    >
-                      + Agregar opción
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            <div className="add-question-controls">
-              <select
-                value={newQuestionType}
-                onChange={(e) => setNewQuestionType(e.target.value)}
-                className="form-select"
-              >
-                <option value="open">Pregunta abierta</option>
-                <option value="closed">Pregunta cerrada (Sí/No)</option>
-                <option value="multiple">Opción múltiple</option>
-              </select>
-              
-              <button
-                type="button"
-                onClick={() => {
-                  const newQuestion = {
-                    text: '',
-                    type: newQuestionType,
-                    ...(newQuestionType === 'multiple' ? { options: [''] } : {})
-                  };
-                  setAdditionalQuestions([...additionalQuestions, newQuestion]);
-                }}
-                className="add-button"
-              >
-                + Agregar pregunta
-              </button>
-            </div>
-          </section>
+                      fullWidth
+                      placeholder="Escriba la pregunta"
+                      required
+                      size="small"
+                      sx={{ mb: 2 }}
+                  />
+
+                  <Box className="answer-section">
+                    {question.type === 'open' && (
+                      // <input
+                      //   type="text"
+                      //   value={answers[index]?.answer || ''}
+                      //   onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      //   className="form-input"
+                      //   placeholder="Escriba su respuesta"
+                      //   required
+                      // />
+                        <TextField
+                            value={answers[index]?.answer || ''}
+                            onChange={(e) => handleAnswerChange(index, e.target.value)}
+                            placeholder="Escriba su respuesta"
+                            size="small"
+                            required
+                            fullWidth
+                        />
+                    )}
+
+                    {question.type === 'closed' && (
+                      // <div className="closed-options">
+                      //   <label className="radio-label">
+                      //     <input
+                      //       type="radio"
+                      //       name={`closed-${index}`}
+                      //       checked={answers[index]?.answer === 'Sí'}
+                      //       onChange={() => handleAnswerChange(index, 'Sí')}
+                      //       className="radio-input"
+                      //     />
+                      //     <span className="radio-custom"></span>
+                      //     Sí
+                      //   </label>
+                      //   <label className="radio-label">
+                      //     <input
+                      //       type="radio"
+                      //       name={`closed-${index}`}
+                      //       checked={answers[index]?.answer === 'No'}
+                      //       onChange={() => handleAnswerChange(index, 'No')}
+                      //       className="radio-input"
+                      //     />
+                      //     <span className="radio-custom"></span>
+                      //     No
+                      //   </label>
+                      // </div>
+                        <RadioGroup
+                            row
+                            name={`closed-${index}`}
+                            value={answers[index]?.answer || ''}
+                            onChange={(e) => handleAnswerChange(index, e.target.value)}
+                        >
+                          <FormControlLabel
+                              value="Sí"
+                              control={<Radio color="primary" />}
+                              label="Sí"
+                          />
+                          <FormControlLabel
+                              value="No"
+                              control={<Radio color="primary" />}
+                              label="No"
+                          />
+                        </RadioGroup>
+                    )}
+
+                    {question.type === 'multiple' && (
+                      // <div className="multiple-options">
+                      //   {question.options.map((option, optIndex) => (
+                      //     <label key={optIndex} className="radio-label">
+                      //       <input
+                      //         type="radio"
+                      //         name={`multiple-${index}`}
+                      //         checked={answers[index]?.selectedOption === option}
+                      //         onChange={() => handleOptionSelect(index, option)}
+                      //         className="radio-input"
+                      //       />
+                      //       <span className="radio-custom"></span>
+                      //       {option}
+                      //     </label>
+                      //   ))}
+                      // </div>
+                        <RadioGroup
+                            name={`multiple-${index}`}
+                            value={answers[index]?.selectedOption || ''}
+                            onChange={(e) => handleOptionSelect(index, e.target.value)}
+                        >
+                          {question.options.map((option, optIndex) => (
+                              <FormControlLabel
+                                  key={optIndex}
+                                  value={option}
+                                  control={<Radio color="primary" />}
+                                  label={option}
+                              />
+                          ))}
+                        </RadioGroup>
+                    )}
+                  </Box>
+
+                  {/*{question.type === 'multiple' && (*/}
+                  {/*  <div className="options-container">*/}
+                  {/*    {question.options.map((option, optIndex) => (*/}
+                  {/*      <div key={optIndex} className="option-input-group">*/}
+                  {/*        <input*/}
+                  {/*          type="text"*/}
+                  {/*          value={option}*/}
+                  {/*          onChange={(e) => {*/}
+                  {/*            const updatedQuestions = [...additionalQuestions];*/}
+                  {/*            updatedQuestions[index].options[optIndex] = e.target.value;*/}
+                  {/*            setAdditionalQuestions(updatedQuestions);*/}
+                  {/*          }}*/}
+                  {/*          className="form-input"*/}
+                  {/*          placeholder={`Opción ${optIndex + 1}`}*/}
+                  {/*          required*/}
+                  {/*        />*/}
+                  {/*        <button*/}
+                  {/*          type="button"*/}
+                  {/*          onClick={() => {*/}
+                  {/*            const updatedQuestions = [...additionalQuestions];*/}
+                  {/*            updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);*/}
+                  {/*            setAdditionalQuestions(updatedQuestions);*/}
+                  {/*          }}*/}
+                  {/*          className="remove-button small"*/}
+                  {/*          aria-label="Eliminar opción"*/}
+                  {/*        >*/}
+                  {/*          ×*/}
+                  {/*        </button>*/}
+                  {/*      </div>*/}
+                  {/*    ))}*/}
+
+                  {/*    <button*/}
+                  {/*      type="button"*/}
+                  {/*      onClick={() => {*/}
+                  {/*        const updatedQuestions = [...additionalQuestions];*/}
+                  {/*        updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];*/}
+                  {/*        setAdditionalQuestions(updatedQuestions);*/}
+                  {/*      }}*/}
+                  {/*      className="add-button small"*/}
+                  {/*    >*/}
+                  {/*      + Agregar opción*/}
+                  {/*    </button>*/}
+                  {/*  </div>*/}
+                  {/*)}*/}
+                  {question.type === 'multiple' && (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
+                        {question.options.map((option, optIndex) => (
+                            <Box key={optIndex} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <TextField
+                                  value={option}
+                                  onChange={(e) => {
+                                    const updatedQuestions = [...additionalQuestions];
+                                    updatedQuestions[index].options[optIndex] = e.target.value;
+                                    setAdditionalQuestions(updatedQuestions);
+                                  }}
+                                  placeholder={`Opción ${optIndex + 1}`}
+                                  size="small"
+                                  required
+                              />
+                              <Button
+                                  type="button"
+                                  color="error"
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() => {
+                                    const updatedQuestions = [...additionalQuestions];
+                                    updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
+                                    setAdditionalQuestions(updatedQuestions);
+                                  }}
+                              >
+                                ×
+                              </Button>
+                            </Box>
+                        ))}
+
+                        <Button
+                            type="button"
+                            size="small"
+                            variant="contained"
+                            onClick={() => {
+                              const updatedQuestions = [...additionalQuestions];
+                              updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
+                              setAdditionalQuestions(updatedQuestions);
+                            }}
+                            sx={{ width: "fit-content" }}
+                        >
+                          + Agregar opción
+                        </Button>
+                      </Box>
+                  )}
+
+                </box>
+              ))}
+
+              {/*<div className="add-question-controls">*/}
+              {/*  <select*/}
+              {/*    value={newQuestionType}*/}
+              {/*    onChange={(e) => setNewQuestionType(e.target.value)}*/}
+              {/*    className="form-select"*/}
+              {/*  >*/}
+              {/*    <option value="open">Pregunta abierta</option>*/}
+              {/*    <option value="closed">Pregunta cerrada (Sí/No)</option>*/}
+              {/*    <option value="multiple">Opción múltiple</option>*/}
+              {/*  </select>*/}
+
+              {/*  <button*/}
+              {/*    type="button"*/}
+              {/*    onClick={() => {*/}
+              {/*      const newQuestion = {*/}
+              {/*        text: '',*/}
+              {/*        type: newQuestionType,*/}
+              {/*        ...(newQuestionType === 'multiple' ? { options: [''] } : {})*/}
+              {/*      };*/}
+              {/*      setAdditionalQuestions([...additionalQuestions, newQuestion]);*/}
+              {/*    }}*/}
+              {/*    className="add-button"*/}
+              {/*  >*/}
+              {/*    + Agregar pregunta*/}
+              {/*  </button>*/}
+              {/*</div>*/}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                <Select
+                    value={newQuestionType}
+                    onChange={(e) => setNewQuestionType(e.target.value)}
+                    size="small"
+                    displayEmpty
+                    sx={{ minWidth: 180 }}
+                >
+                  <MenuItem value="open">Pregunta abierta</MenuItem>
+                  <MenuItem value="closed">Pregunta cerrada (Sí/No)</MenuItem>
+                  <MenuItem value="multiple">Opción múltiple</MenuItem>
+                </Select>
+
+                <Button
+                    variant="outlined"
+                    startIcon={<span style={{ fontWeight: "bold" }}>+</span>}
+                    color="primary"
+                    onClick={() => {
+                      const newQuestion = {
+                        text: "",
+                        type: newQuestionType,
+                        ...(newQuestionType === "multiple" ? { options: [""] } : {}),
+                      };
+                      setAdditionalQuestions([...additionalQuestions, newQuestion]);
+                    }}
+                    sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  Agregar pregunta
+                </Button>
+              </Box>
+            </Box>
+          </GlassCard>
 
           <div className="form-actions">
             <button type="submit" className="submit-button">Guardar Formulario</button>
