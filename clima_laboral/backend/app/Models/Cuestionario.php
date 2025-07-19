@@ -31,4 +31,8 @@ class Cuestionario extends Model
     {
         return $this->hasMany(Participante::class, 'id_cuestionario', 'id_cuestionario');
     }
+    public function cuestionario_token(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Token::class, 'id_cuestionario', 'id_cuestionario');
+    }
 }

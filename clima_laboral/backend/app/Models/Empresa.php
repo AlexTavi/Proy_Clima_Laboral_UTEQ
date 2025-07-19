@@ -16,22 +16,48 @@ class Empresa extends Model
         'cod_empresa',
         'nom_empresa',
         'rfc_empresa',
-        'calle',
-        'num_ext',
-        'num_int',
-        'colonia',
         'cp',
         'municipio',
         'estado',
         'email_empresa',
         'giro',
-        'num_empleados',
         'estructura',
         'adscripciones',
         'cues_contratados',
         'fecha_inicio_vigencia',
         'fecha_fin_vigencia',
+        'telefono',
+        'responsable',
+        'additionalQuestions',
+        'answers',
+        'direccion',
+        'num'
     ];
+
+    protected $casts = [
+        'estructura' => 'array',
+        'adscripciones' => 'array',
+        'additionalQuestions' => 'array',
+        'answers' => 'array',
+    ];
+
+    protected function telefono(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => preg_replace('/[^0-9]/', '', $value),
+        );
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->nom_empresa = trim($model->nom_empresa);
+            $model->responsable = trim($model->responsable);
+        });
+    }
+
     public function empresa_usuarios(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Usuario::class, 'id_empresa', 'id_empresa');
@@ -43,5 +69,9 @@ class Empresa extends Model
     public function empresa_cuestionario(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Cuestionario::class, 'id_empresa', 'id_empresa');
+    }
+    public function empresa_token(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Token::class, 'id_empresa', 'id_empresa');
     }
 }

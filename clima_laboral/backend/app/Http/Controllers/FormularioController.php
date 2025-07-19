@@ -8,12 +8,6 @@ use Illuminate\Support\Facades\Log;
 
 class FormularioController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(Request $request)
     {
         try {
@@ -29,7 +23,7 @@ class FormularioController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->validationErrorResponse($e);
-            
+
         } catch (\Exception $e) {
             Log::error('Error al guardar formulario: ' . $e->getMessage());
             return $this->serverErrorResponse($e);
@@ -83,15 +77,15 @@ public function index()
 {
     try {
         $formularios = Formulario::orderBy('created_at', 'desc')->get();
-        
+
         return response()->json([
             'success' => true,
             'data' => $formularios
         ], 200);
-        
+
     } catch (\Exception $e) {
         Log::error('Error al obtener formularios: ' . $e->getMessage());
-        
+
         return response()->json([
             'success' => false,
             'message' => 'Error al obtener los formularios'
