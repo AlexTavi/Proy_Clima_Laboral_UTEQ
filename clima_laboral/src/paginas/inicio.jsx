@@ -7,7 +7,7 @@ const Inicio = () => {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const apiUrl = "https://api.grupocrehce.com/";
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const handleResize = () => {

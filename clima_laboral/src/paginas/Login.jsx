@@ -10,7 +10,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
-  const apiUrl = "https://api.grupocrehce.com/";
+  const apiUrl = import.meta.env.VITE_BACKEND_URL;
   const { login } = useAuth();
 
   // ✅ Redirigir automáticamente si ya hay sesión y el token es válido
@@ -79,8 +79,8 @@ export default function Login() {
       const meData = await meRes.json();
 
       // ✅ Guarda sesión antes de redirigir
+      console.log(meData.user)
       login(data.token, meData.user);
-      localStorage.setItem("token", data.token);
 
       toast.success("Inicio de sesión exitoso");
       console.log("Redirigiendo a /inicio");
