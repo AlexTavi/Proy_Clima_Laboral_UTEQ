@@ -13,7 +13,6 @@ class Empresa extends Model
 
     // Campos que se pueden llenar con create() o update()
     protected $fillable = [
-        'cod_empresa',
         'nom_empresa',
         'rfc_empresa',
         'cp',
@@ -31,7 +30,8 @@ class Empresa extends Model
         'additionalQuestions',
         'answers',
         'direccion',
-        'num'
+        'num',
+        'empleados'
     ];
 
     protected $casts = [

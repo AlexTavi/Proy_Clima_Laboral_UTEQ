@@ -16,7 +16,7 @@ class EmpresaController extends Controller
 
             $validated = $this->validateRequest($request);
 
-            $formulario = Formulario::create($validated);
+            $formulario = Empresa::create($validated);
 
             return response()->json([
                 'success' => true,
@@ -37,22 +37,20 @@ class EmpresaController extends Controller
         return $request->validate([
             'nom_empresa' => 'required|string|max:60',
             'rfc_empresa' => 'nullable|string|max:12',
-            'calle' => 'required|string|max:60',
-            'num_ext' => 'required|string|max:10',
-            'num_int' => 'required|string|max:10',
-            'colonia' => 'required|string|max:50',
             'cp' => 'required|string|max:5',
             'municipio' => 'required|string|max:60',
             'estado' => 'required|string|max:60',
             'email_empresa' => 'required|string|max:40',
             'giro' => 'required|string|max:80',
-            'num_empleados' => 'required|string|max:255',
             'estructura' => 'required|array',
             'adscripciones' => 'required|array',
-            'telefono' => 'required|string|max:20',
+            'telefono' => 'nullable|string|max:20',
             'responsable' => 'required|string|max:255',
             'additionalQuestions' => 'nullable|array',
             'answers' => 'nullable|array',
+            'direccion' => 'required|string|max:255',
+            'num' => 'nullable|string|max:255',
+            'empleados' => 'required|string|max:255',
         ]);
     }
     protected function sanitizeRequest(Request $request): void
