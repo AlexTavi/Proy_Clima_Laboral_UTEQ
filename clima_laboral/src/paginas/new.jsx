@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import GlassCard from '../componentes/GlassCard.jsx';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
@@ -19,7 +19,6 @@ import {
 
 const NuevoFormulario = () => {
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -34,7 +33,7 @@ const NuevoFormulario = () => {
   const [puestosExtra, setPuestosExtra] = useState([]);
   const [adscripcionesSeleccionadas, setAdscripcionesSeleccionadas] = useState([]);
   const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
-  const [additionalQuestions, setAdditionalQuestions] = useState([]);
+  const [additionalquestions, setAdditionalQuestions] = useState([]);
   const [newQuestionType, setNewQuestionType] = useState('open');
 
   const [formData, setFormData] = useState({
@@ -49,10 +48,10 @@ const NuevoFormulario = () => {
     subGiro: '',
     otroGiro: '',
     empleados: '',
-    domicilio: '',
     telefono: '',
     responsable: '',
     estructura: {},
+    num: '',
   });
 
   const girosCatalogo = {
@@ -74,9 +73,8 @@ const NuevoFormulario = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Token inválido');
-        const data = await res.json();
-        setUsuario(data.user);
-      } catch (err) {
+        // const data = await res.json();
+      } catch {
         localStorage.removeItem('token');
         navigate('/login');
       } finally {
@@ -118,7 +116,7 @@ const NuevoFormulario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const hasEmptyQuestions = additionalQuestions.some(q =>
+    const hasEmptyQuestions = additionalquestions.some(q =>
       !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
     );
 
@@ -127,11 +125,11 @@ const NuevoFormulario = () => {
       return;
     }
 
-    const hasEmptyAnswers = additionalQuestions.some((q, index) => {
+    const hasEmptyAnswers = additionalquestions.some((q, index) => {
       if (!answers[index]) return true;
       if (q.type === 'multiple' && !answers[index].selectedOption) return true;
-      if (q.type !== 'multiple' && !answers[index].answer) return true;
-      return false;
+      return q.type !== 'multiple' && !answers[index].answer;
+
     });
 
     if (hasEmptyAnswers) {
@@ -153,21 +151,41 @@ const NuevoFormulario = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
+      const payload = {
+        ...formData,
+        giro: giroFinal,
+        estructura: estructuraFinal,
+        adscripciones: adscripcionesFinales,
+        additionalquestions,
+        answers,
+      };
+
+      console.log('Payload enviado:', JSON.stringify(payload, null, 2));
+
       const res = await fetch(apiUrl+'api/forms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          giro: giroFinal,
-          estructura: estructuraFinal,
-          adscripciones: adscripcionesFinales,
-          additionalQuestions,
-          answers,
-        }),
+        body: JSON.stringify(payload),
       });
+
+      // const res = await fetch(apiUrl+'api/forms', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      //   body: JSON.stringify({
+      //     ...formData,
+      //     giro: giroFinal,
+      //     estructura: estructuraFinal,
+      //     adscripciones: adscripcionesFinales,
+      //     additionalquestions,
+      //     answers,
+      //   }),
+      // });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -179,14 +197,19 @@ const NuevoFormulario = () => {
       setFormData({
         nom_empresa: '',
         rfc_empresa: '',
+        direccion: '',
+        cp: '',
+        municipio: '',
+        estado: '',
+        email_empresa: '',
         giro: '',
         subGiro: '',
         otroGiro: '',
         empleados: '',
-        domicilio: '',
         telefono: '',
         responsable: '',
         estructura: {},
+        num: '',
       });
       setPuestosSeleccionados([]);
       setPuestosExtra([]);
@@ -362,7 +385,6 @@ const NuevoFormulario = () => {
                   label="Telefono"
                   variant="outlined"
                   fullWidth
-                  required
                   value={formData.telefono}
                   onChange={handleChange}
               />
@@ -397,6 +419,15 @@ const NuevoFormulario = () => {
                   onChange={handleChange}
               />
               <TextField
+                  id="num"
+                  name="num"
+                  label="Numero"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.num}
+                  onChange={handleChange}
+              />
+              <TextField
                   id="cp"
                   name="cp"
                   label="Código postal"
@@ -413,7 +444,7 @@ const NuevoFormulario = () => {
                   variant="outlined"
                   fullWidth
                   required
-                  value={formData.cp}
+                  value={formData.estado}
                   onChange={handleChange}
               />
               <TextField
@@ -423,7 +454,7 @@ const NuevoFormulario = () => {
                   variant="outlined"
                   fullWidth
                   required
-                  value={formData.cp}
+                  value={formData.municipio}
                   onChange={handleChange}
               />
             </Box>
@@ -525,60 +556,6 @@ const NuevoFormulario = () => {
               >
                 Agregar otro puesto
               </Button>
-
-              {/*{puestosExtra.map((puesto, idx) => (*/}
-              {/*  <div key={`puesto-extra-${idx}`} className="form-group extra-input-group">*/}
-              {/*    <input*/}
-              {/*      type="text"*/}
-              {/*      value={puesto.nombre}*/}
-              {/*      onChange={(e) => {*/}
-              {/*        const nuevoNombre = e.target.value;*/}
-              {/*        setPuestosExtra(prev => {*/}
-              {/*          const copy = [...prev];*/}
-              {/*          copy[idx].nombre = nuevoNombre;*/}
-              {/*          return copy;*/}
-              {/*        });*/}
-              {/*      }}*/}
-              {/*      className="form-input"*/}
-              {/*      placeholder="Nombre del puesto adicional"*/}
-              {/*      aria-label="Nombre del puesto adicional"*/}
-              {/*    />*/}
-              {/*    <input*/}
-              {/*      type="number"*/}
-              {/*      value={puesto.numero}*/}
-              {/*      onChange={(e) => {*/}
-              {/*        const numero = parseInt(e.target.value) || 0;*/}
-              {/*        setPuestosExtra(prev => {*/}
-              {/*          const copy = [...prev];*/}
-              {/*          copy[idx].numero = numero;*/}
-              {/*          return copy;*/}
-              {/*        });*/}
-              {/*      }}*/}
-              {/*      className="form-input number-input"*/}
-              {/*      min="0"*/}
-              {/*      placeholder="Nº ocupantes"*/}
-              {/*      aria-label="Número de ocupantes"*/}
-              {/*    />*/}
-              {/*    <button*/}
-              {/*      type="button"*/}
-              {/*      onClick={() => {*/}
-              {/*        setPuestosExtra(prev => prev.filter((_, i) => i !== idx));*/}
-              {/*      }}*/}
-              {/*      className="remove-button"*/}
-              {/*      aria-label="Eliminar puesto"*/}
-              {/*    >*/}
-              {/*      ×*/}
-              {/*    </button>*/}
-              {/*  </div>*/}
-              {/*))}*/}
-
-              {/*<button*/}
-              {/*  type="button"*/}
-              {/*  onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}*/}
-              {/*  className="add-button"*/}
-              {/*>*/}
-              {/*  + Agregar otro puesto*/}
-              {/*</button>*/}
             </Box>
           </GlassCard>
 
@@ -656,66 +633,6 @@ const NuevoFormulario = () => {
               >
                 Agregar otra adscripción
               </Button>
-              {/*<div className="checkbox-container">*/}
-              {/*  {adscripcionesDisponibles.map((ads) => (*/}
-              {/*    <div key={ads} className="checkbox-group">*/}
-              {/*      <label className="checkbox-label">*/}
-              {/*        <input*/}
-              {/*          type="checkbox"*/}
-              {/*          id={`ads-${ads}`}*/}
-              {/*          checked={adscripcionesSeleccionadas.includes(ads)}*/}
-              {/*          onChange={(e) => {*/}
-              {/*            const checked = e.target.checked;*/}
-              {/*            setAdscripcionesSeleccionadas(prev =>*/}
-              {/*              checked ? [...prev, ads] : prev.filter(a => a !== ads)*/}
-              {/*            );*/}
-              {/*          }}*/}
-              {/*          className="checkbox-input"*/}
-              {/*        />*/}
-              {/*        <span className="checkbox-custom"></span>*/}
-              {/*        {ads}*/}
-              {/*      </label>*/}
-              {/*    </div>*/}
-              {/*  ))}*/}
-              {/*</div>*/}
-
-              {/*{adscripcionesExtra.map((ads, idx) => (*/}
-              {/*  <div key={`ads-extra-${idx}`} className="form-group extra-input-group">*/}
-              {/*    <input*/}
-              {/*      type="text"*/}
-              {/*      value={ads}*/}
-              {/*      onChange={(e) => {*/}
-              {/*        const val = e.target.value;*/}
-              {/*        setAdscripcionesExtra(prev => {*/}
-              {/*          const copy = [...prev];*/}
-              {/*          copy[idx] = val;*/}
-              {/*          return copy;*/}
-              {/*        });*/}
-              {/*      }}*/}
-              {/*      className="form-input"*/}
-              {/*      placeholder="Adscripción adicional"*/}
-              {/*      aria-label="Adscripción adicional"*/}
-              {/*    />*/}
-              {/*    <button*/}
-              {/*      type="button"*/}
-              {/*      onClick={() => {*/}
-              {/*        setAdscripcionesExtra(prev => prev.filter((_, i) => i !== idx));*/}
-              {/*      }}*/}
-              {/*      className="remove-button"*/}
-              {/*      aria-label="Eliminar adscripción"*/}
-              {/*    >*/}
-              {/*      ×*/}
-              {/*    </button>*/}
-              {/*  </div>*/}
-              {/*))}*/}
-
-              {/*<button*/}
-              {/*  type="button"*/}
-              {/*  onClick={() => setAdscripcionesExtra([...adscripcionesExtra, ''])}*/}
-              {/*  className="add-button"*/}
-              {/*>*/}
-              {/*  + Agregar otra adscripción*/}
-              {/*</button>*/}
             </Box>
           </GlassCard>
 
@@ -725,28 +642,8 @@ const NuevoFormulario = () => {
             </Typography>
             <Box component="form" display="flex" flexDirection="column" gap={3}>
 
-              {additionalQuestions.map((question, index) => (
+              {additionalquestions.map((question, index) => (
                 <box key={index} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2, mb: 3 }}>
-                  {/*<div className="question-header">*/}
-                  {/*  <span className="question-type-badge">*/}
-                  {/*    {question.type === 'open' && 'Abierta'}*/}
-                  {/*    {question.type === 'closed' && 'Cerrada (Sí/No)'}*/}
-                  {/*    {question.type === 'multiple' && 'Opción múltiple'}*/}
-                  {/*  </span>*/}
-                  {/*  <button*/}
-                  {/*    type="button"*/}
-                  {/*    onClick={() => {*/}
-                  {/*      setAdditionalQuestions(prev => prev.filter((_, i) => i !== index));*/}
-                  {/*      const newAnswers = {...answers};*/}
-                  {/*      delete newAnswers[index];*/}
-                  {/*      setAnswers(newAnswers);*/}
-                  {/*    }}*/}
-                  {/*    className="remove-button"*/}
-                  {/*    aria-label="Eliminar pregunta"*/}
-                  {/*  >*/}
-                  {/*    ×*/}
-                  {/*  </button>*/}
-                  {/*</div>*/}
                   <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
                     <Chip
                         label={
@@ -779,25 +676,10 @@ const NuevoFormulario = () => {
                       <DeleteIcon />
                     </IconButton>
                   </Stack>
-
-                  {/*<div className="form-group">*/}
-                  {/*  <input*/}
-                  {/*    type="text"*/}
-                  {/*    value={question.text}*/}
-                  {/*    onChange={(e) => {*/}
-                  {/*      const updatedQuestions = [...additionalQuestions];*/}
-                  {/*      updatedQuestions[index].text = e.target.value;*/}
-                  {/*      setAdditionalQuestions(updatedQuestions);*/}
-                  {/*    }}*/}
-                  {/*    className="form-input"*/}
-                  {/*    placeholder="Escriba la pregunta"*/}
-                  {/*    required*/}
-                  {/*  />*/}
-                  {/*</div>*/}
                   <TextField
                       value={question.text}
                       onChange={(e) => {
-                        const updatedQuestions = [...additionalQuestions];
+                        const updatedQuestions = [...additionalquestions];
                         updatedQuestions[index].text = e.target.value;
                         setAdditionalQuestions(updatedQuestions);
                       }}
@@ -810,14 +692,6 @@ const NuevoFormulario = () => {
 
                   <Box className="answer-section">
                     {question.type === 'open' && (
-                      // <input
-                      //   type="text"
-                      //   value={answers[index]?.answer || ''}
-                      //   onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      //   className="form-input"
-                      //   placeholder="Escriba su respuesta"
-                      //   required
-                      // />
                         <TextField
                             value={answers[index]?.answer || ''}
                             onChange={(e) => handleAnswerChange(index, e.target.value)}
@@ -829,30 +703,6 @@ const NuevoFormulario = () => {
                     )}
 
                     {question.type === 'closed' && (
-                      // <div className="closed-options">
-                      //   <label className="radio-label">
-                      //     <input
-                      //       type="radio"
-                      //       name={`closed-${index}`}
-                      //       checked={answers[index]?.answer === 'Sí'}
-                      //       onChange={() => handleAnswerChange(index, 'Sí')}
-                      //       className="radio-input"
-                      //     />
-                      //     <span className="radio-custom"></span>
-                      //     Sí
-                      //   </label>
-                      //   <label className="radio-label">
-                      //     <input
-                      //       type="radio"
-                      //       name={`closed-${index}`}
-                      //       checked={answers[index]?.answer === 'No'}
-                      //       onChange={() => handleAnswerChange(index, 'No')}
-                      //       className="radio-input"
-                      //     />
-                      //     <span className="radio-custom"></span>
-                      //     No
-                      //   </label>
-                      // </div>
                         <RadioGroup
                             row
                             name={`closed-${index}`}
@@ -873,21 +723,6 @@ const NuevoFormulario = () => {
                     )}
 
                     {question.type === 'multiple' && (
-                      // <div className="multiple-options">
-                      //   {question.options.map((option, optIndex) => (
-                      //     <label key={optIndex} className="radio-label">
-                      //       <input
-                      //         type="radio"
-                      //         name={`multiple-${index}`}
-                      //         checked={answers[index]?.selectedOption === option}
-                      //         onChange={() => handleOptionSelect(index, option)}
-                      //         className="radio-input"
-                      //       />
-                      //       <span className="radio-custom"></span>
-                      //       {option}
-                      //     </label>
-                      //   ))}
-                      // </div>
                         <RadioGroup
                             name={`multiple-${index}`}
                             value={answers[index]?.selectedOption || ''}
@@ -904,51 +739,6 @@ const NuevoFormulario = () => {
                         </RadioGroup>
                     )}
                   </Box>
-
-                  {/*{question.type === 'multiple' && (*/}
-                  {/*  <div className="options-container">*/}
-                  {/*    {question.options.map((option, optIndex) => (*/}
-                  {/*      <div key={optIndex} className="option-input-group">*/}
-                  {/*        <input*/}
-                  {/*          type="text"*/}
-                  {/*          value={option}*/}
-                  {/*          onChange={(e) => {*/}
-                  {/*            const updatedQuestions = [...additionalQuestions];*/}
-                  {/*            updatedQuestions[index].options[optIndex] = e.target.value;*/}
-                  {/*            setAdditionalQuestions(updatedQuestions);*/}
-                  {/*          }}*/}
-                  {/*          className="form-input"*/}
-                  {/*          placeholder={`Opción ${optIndex + 1}`}*/}
-                  {/*          required*/}
-                  {/*        />*/}
-                  {/*        <button*/}
-                  {/*          type="button"*/}
-                  {/*          onClick={() => {*/}
-                  {/*            const updatedQuestions = [...additionalQuestions];*/}
-                  {/*            updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);*/}
-                  {/*            setAdditionalQuestions(updatedQuestions);*/}
-                  {/*          }}*/}
-                  {/*          className="remove-button small"*/}
-                  {/*          aria-label="Eliminar opción"*/}
-                  {/*        >*/}
-                  {/*          ×*/}
-                  {/*        </button>*/}
-                  {/*      </div>*/}
-                  {/*    ))}*/}
-
-                  {/*    <button*/}
-                  {/*      type="button"*/}
-                  {/*      onClick={() => {*/}
-                  {/*        const updatedQuestions = [...additionalQuestions];*/}
-                  {/*        updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];*/}
-                  {/*        setAdditionalQuestions(updatedQuestions);*/}
-                  {/*      }}*/}
-                  {/*      className="add-button small"*/}
-                  {/*    >*/}
-                  {/*      + Agregar opción*/}
-                  {/*    </button>*/}
-                  {/*  </div>*/}
-                  {/*)}*/}
                   {question.type === 'multiple' && (
                       <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
                         {question.options.map((option, optIndex) => (
@@ -956,7 +746,7 @@ const NuevoFormulario = () => {
                               <TextField
                                   value={option}
                                   onChange={(e) => {
-                                    const updatedQuestions = [...additionalQuestions];
+                                    const updatedQuestions = [...additionalquestions];
                                     updatedQuestions[index].options[optIndex] = e.target.value;
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -970,7 +760,7 @@ const NuevoFormulario = () => {
                                   size="small"
                                   variant="outlined"
                                   onClick={() => {
-                                    const updatedQuestions = [...additionalQuestions];
+                                    const updatedQuestions = [...additionalquestions];
                                     updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -985,7 +775,7 @@ const NuevoFormulario = () => {
                             size="small"
                             variant="contained"
                             onClick={() => {
-                              const updatedQuestions = [...additionalQuestions];
+                              const updatedQuestions = [...additionalquestions];
                               updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
                               setAdditionalQuestions(updatedQuestions);
                             }}
@@ -999,32 +789,6 @@ const NuevoFormulario = () => {
                 </box>
               ))}
 
-              {/*<div className="add-question-controls">*/}
-              {/*  <select*/}
-              {/*    value={newQuestionType}*/}
-              {/*    onChange={(e) => setNewQuestionType(e.target.value)}*/}
-              {/*    className="form-select"*/}
-              {/*  >*/}
-              {/*    <option value="open">Pregunta abierta</option>*/}
-              {/*    <option value="closed">Pregunta cerrada (Sí/No)</option>*/}
-              {/*    <option value="multiple">Opción múltiple</option>*/}
-              {/*  </select>*/}
-
-              {/*  <button*/}
-              {/*    type="button"*/}
-              {/*    onClick={() => {*/}
-              {/*      const newQuestion = {*/}
-              {/*        text: '',*/}
-              {/*        type: newQuestionType,*/}
-              {/*        ...(newQuestionType === 'multiple' ? { options: [''] } : {})*/}
-              {/*      };*/}
-              {/*      setAdditionalQuestions([...additionalQuestions, newQuestion]);*/}
-              {/*    }}*/}
-              {/*    className="add-button"*/}
-              {/*  >*/}
-              {/*    + Agregar pregunta*/}
-              {/*  </button>*/}
-              {/*</div>*/}
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
                 <Select
                     value={newQuestionType}
@@ -1048,7 +812,7 @@ const NuevoFormulario = () => {
                         type: newQuestionType,
                         ...(newQuestionType === "multiple" ? { options: [""] } : {}),
                       };
-                      setAdditionalQuestions([...additionalQuestions, newQuestion]);
+                      setAdditionalQuestions([...additionalquestions, newQuestion]);
                     }}
                     sx={{ textTransform: "none", fontWeight: 600 }}
                 >
