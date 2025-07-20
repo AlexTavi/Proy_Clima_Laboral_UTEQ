@@ -85,4 +85,23 @@ class EmpresaController extends Controller
             'error' => env('APP_DEBUG') ? $e->getMessage() : 'Error interno del servidor'
         ], 201);
     }
+    public function index()
+    {
+        try {
+            $formularios = Empresa::orderBy('created_at', 'desc')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $formularios
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error al obtener formularios: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los formularios'
+            ], 500);
+        }
+    }
 }

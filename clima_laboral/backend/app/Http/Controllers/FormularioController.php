@@ -73,23 +73,23 @@ class FormularioController extends Controller
         ], 500);
     }
     // En App/Http/Controllers/FormularioController.php
-public function index()
-{
-    try {
-        $formularios = Formulario::orderBy('created_at', 'desc')->get();
+    public function index()
+    {
+        try {
+            $formularios = Formulario::orderBy('created_at', 'desc')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $formularios
-        ], 200);
+            return response()->json([
+                'success' => true,
+                'data' => $formularios
+            ], 200);
 
-    } catch (\Exception $e) {
-        Log::error('Error al obtener formularios: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Error al obtener formularios: ' . $e->getMessage());
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al obtener los formularios'
-        ], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los formularios'
+            ], 500);
+        }
     }
-}
 }

@@ -13,7 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/forms', [EmpresaController::class, 'store']);
-    Route::get('/forms', [FormularioController::class, 'index']);
+    Route::get('/forms', [EmpresaController::class, 'index']);
 
     // Aquí irían otras rutas que SÍ requieran autenticación
     // Ejemplo: Route::get('/user-forms', [FormularioController::class, 'index']);
