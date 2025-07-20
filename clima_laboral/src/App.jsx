@@ -9,12 +9,12 @@ import Principal from './paginas/principal.jsx';
 import Login from './paginas/Login.jsx';
 import Inicio from './paginas/inicio.jsx';
 import NuevoFormulario from './paginas/new.jsx';
-import ListadoFormularios from './paginas/registros.jsx';
 import Footer from "./componentes/Footer.jsx";
 import Info from "./paginas/Info.jsx";
 import Servicios from "./paginas/Servicios.jsx";
 import Proyectos from "./paginas/Proyectos.jsx";
 import Contacto from "./paginas/Contacto.jsx";
+import Empresas from "./paginas/Empresas.jsx";
 import './App.scss';
 import logo from '../imagen.jpg';
 import Beneficios from "./paginas/Beneficios.jsx";
@@ -33,7 +33,6 @@ function AppContent() {
   };
 
   const handleToggleSidebar = (value) => {
-    console.log('aaaa')
     setToggled(value);
   };
 
@@ -273,7 +272,7 @@ function AppContent() {
                 } />
                 <Route path="/registros" element={
                   <div className="registros-page-container">
-                    <ListadoFormularios />
+                    <Empresas />
                   </div>
                 } />
               </Routes>

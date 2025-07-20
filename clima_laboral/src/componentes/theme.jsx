@@ -7,6 +7,7 @@ const theme = createTheme({
         secondary: { main: "#4946a9" },
         background: { default: "#eaebee" },
         info: { main: "#9a99d3" },
+        infos: { main: "#bebee3" },
     },
     shape: { borderRadius: 16 },
     typography: { fontFamily: "'Poppins', 'Segoe UI', sans-serif" }
