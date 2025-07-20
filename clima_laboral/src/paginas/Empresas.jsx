@@ -13,6 +13,52 @@ function resumenEstructura(estructura) {
         .map(([key, val]) => `${val} ${key}`)
         .join(', ');
 }
+// ✅ Mandar datos a Rasa con manejo de errores y respuesta real
+async function handleNuevoFormulario(empresa) {
+    if (!empresa || !empresa.id_empresa) {
+        console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
+        alert("No hay datos válidos para enviar a la IA.");
+        return;
+    }
+
+    console.log("🚀 Enviando datos a Rasa:", JSON.stringify({
+        sender: `usuario_${empresa.id_empresa}`,
+        message: "Nuevo formulario de empresa", // Dispara el intent `nuevo_formulario`
+        metadata: { empresa }
+    }, null, 2));
+
+    try {
+        const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                sender: `usuario_${empresa.id_empresa}`, 
+                message: "Nuevo formulario de empresa",
+                metadata: { empresa }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ Respuesta de Rasa:", data);
+
+        // 🔥 Mostrar la respuesta real de Rasa
+        const respuestaIA = data.map(msg => msg.text).filter(Boolean).join("\n");
+        alert(respuestaIA || "Rasa procesó los datos correctamente.");
+
+    } catch (error) {
+        console.error("❌ Error al enviar a Rasa:", error);
+        alert("Hubo un problema al enviar los datos a la IA. Revisa la consola.");
+    }
+}
+
+
+
 
 export default function Empresas() {
     const [rows, setRows] = useState([]);
