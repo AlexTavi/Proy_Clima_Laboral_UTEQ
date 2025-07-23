@@ -1,159 +1,225 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
+} from "recharts";
+import { Box, Typography } from "@mui/material";
+import GlassCard from "../componentes/GlassCard"; // ✅ USAMOS EL COMPONENTE PARA DISEÑO
 
-const Inicio = () => {
-  const navigate = useNavigate();
-  const [usuario, setUsuario] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const apiUrl = import.meta.env.VITE_BACKEND_URL;
+// Colores para las gráficas
+const COLORS = ["#4CAF50", "#2196F3", "#FF9800", "#F44336", "#9C27B0", "#00BCD4"];
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) {
-        setIsMenuOpen(false);
-      }
-    };
+// Datos de ejemplo
+const dataClima = [
+  { name: "Comunicación", porcentaje: 85 },
+  { name: "Liderazgo", porcentaje: 72 },
+  { name: "Crecimiento", porcentaje: 65 },
+  { name: "Ambiente", porcentaje: 90 },
+];
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+const dataSatisfaccion = [
+  { name: "Muy Satisfecho", value: 400 },
+  { name: "Satisfecho", value: 300 },
+  { name: "Neutral", value: 200 },
+  { name: "Insatisfecho", value: 100 },
+];
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
+const dataTendencia = [
+  { mes: "Ene", clima: 70 },
+  { mes: "Feb", clima: 75 },
+  { mes: "Mar", clima: 80 },
+  { mes: "Abr", clima: 78 },
+  { mes: "May", clima: 85 },
+];
 
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+const dataParticipacion = [
+  { name: "Área A", porcentaje: 90 },
+  { name: "Área B", porcentaje: 75 },
+  { name: "Área C", porcentaje: 60 },
+  { name: "Área D", porcentaje: 45 },
+];
 
-    fetch(apiUrl+'api/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Token inválido');
-        return res.json();
-      })
-      .then((data) => {
-        setUsuario(data.user);
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('usuario');
-        navigate('/login');
-      })
-      .finally(() => setLoading(false));
-  }, [navigate]);
+const dataComparativa = [
+  { dimension: "Comunicación", 2024: 70, 2025: 85 },
+  { dimension: "Liderazgo", 2024: 68, 2025: 72 },
+  { dimension: "Crecimiento", 2024: 60, 2025: 65 },
+  { dimension: "Ambiente", 2024: 82, 2025: 90 },
+];
 
-  const cerrarSesion = () => {
-    const token = localStorage.getItem('token');
+const dataRadar = [
+  { subject: "Comunicación", A: 120, fullMark: 150 },
+  { subject: "Liderazgo", A: 98, fullMark: 150 },
+  { subject: "Crecimiento", A: 86, fullMark: 150 },
+  { subject: "Ambiente", A: 130, fullMark: 150 },
+  { subject: "Satisfacción", A: 99, fullMark: 150 },
+];
 
-    fetch(apiUrl+'api/logout', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).finally(() => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('usuario');
-      navigate('/login');
-    });
-  };
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  if (loading) return <p>Cargando...</p>;
-
+export default function Inicio() {
   return (
-    <div className="inicio-container">
-      <header className="navbar">
-        <div className="logo">RH</div>
-        
-        {isMobile && (
-          <button className="hamburger-button" onClick={toggleMenu}>
-            {isMenuOpen ? '✕' : '☰'}
-          </button>
-        )}
-        
-        {!isMobile && (
-          <>
-            <nav className="nav-links">
-              <Link to="/forms/new">Nuevo Formulario</Link>
-              <Link to="#">Formularios</Link>
-              <Link to="/registros">Registros</Link>
-              <Link to="#">Dashboards</Link>
-            </nav>
-            <div className="profile-icon">
-              <span role="img" aria-label="perfil">👤</span>
-              {usuario && <span className="username">{usuario.nombre}</span>}
-              <button 
-                onClick={cerrarSesion} 
-                className="logout-button"
+    <Box sx={{ padding: 4 }}>
+      {/* ✅ TÍTULO PRINCIPAL */}
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: "bold",
+          textAlign: "center",
+          mb: 4,
+          color: "#4946a9",
+        }}
+      >
+        DASHBOARDS - Clima Laboral
+      </Typography>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+          gap: 4,
+        }}
+      >
+        {/* ✅ 1. BARRA: DIMENSIONES DEL CLIMA LABORAL */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Dimensiones del Clima Laboral
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={dataClima}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="porcentaje" fill="#4CAF50" />
+            </BarChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        {/* ✅ 2. PIE: SATISFACCIÓN GENERAL */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Satisfacción General
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={dataSatisfaccion}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
               >
-                Cerrar sesión
-              </button>
-            </div>
-          </>
-        )}
-        
-        {isMobile && (
-          <nav className={`nav-links mobile ${isMenuOpen ? 'open' : ''}`}>
-            <Link to="/forms/new" onClick={toggleMenu}>Nuevo Formulario</Link>
-            <Link to="#" onClick={toggleMenu}>Formularios</Link>
-            <Link to="/registros" onClick={toggleMenu}>Registros</Link>
-            <Link to="#" onClick={toggleMenu}>Dashboards</Link>
-            
-            <div className="mobile-profile">
-              <span role="img" aria-label="perfil">👤</span>
-              {usuario && <span className="username">{usuario.nombre}</span>}
-              <button 
-                onClick={() => {
-                  cerrarSesion();
-                  toggleMenu();
-                }} 
-                className="logout-button"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          </nav>
-        )}
-      </header>
+                {dataSatisfaccion.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </GlassCard>
 
-      {isMobile && isMenuOpen && (
-        <div className="menu-overlay" onClick={toggleMenu} />
-      )}
+        {/* ✅ 3. LINE: TENDENCIA DEL CLIMA */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Tendencia del Clima Laboral
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={dataTendencia}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="clima"
+                stroke="#2196F3"
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
 
-      <main className="hero">
-        <h1>Mejora y transforma tu ambiente laboral</h1>
-        <p>Una plataforma diseñada para entender, medir y mejorar tu organización.</p>
-      </main>
+        {/* ✅ 4. BARRA HORIZONTAL: PARTICIPACIÓN POR ÁREA */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Participación por Área
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart layout="vertical" data={dataParticipacion}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis dataKey="name" type="category" />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="porcentaje" fill="#FF9800" />
+            </BarChart>
+          </ResponsiveContainer>
+        </GlassCard>
 
-      <footer className="footer">
-        <div className="footer-item">
-          <span role="img" aria-label="correo">✉️</span>
-          <div>
-            <div>despachoRH@gmail.com</div>
-            <div>+52 442 623 927 5</div>
-          </div>
-        </div>
-        <div className="footer-item">
-          <span role="img" aria-label="ubicación">📍</span>
-          <div>
-            <div>Fuerte de Alora 217 Col. el Vergel,</div>
-            <div>Santiago de Querétaro QRO</div>
-          </div>
-        </div>
-      </footer>
-    </div>
+        {/* ✅ 5. ÁREA: COMPARATIVA 2024 VS 2025 */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Comparativa 2024 vs 2025
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={dataComparativa}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="dimension" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey="2024" stroke="#9C27B0" fill="#9C27B0" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="2025" stroke="#00BCD4" fill="#00BCD4" fillOpacity={0.3} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        {/* ✅ 6. RADAR: VISUALIZACIÓN GLOBAL */}
+        <GlassCard>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Evaluación Global por Dimensión
+          </Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={dataRadar}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="subject" />
+              <PolarRadiusAxis />
+              <Radar
+                name="Clima Laboral"
+                dataKey="A"
+                stroke="#F44336"
+                fill="#F44336"
+                fillOpacity={0.4}
+              />
+              <Legend />
+            </RadarChart>
+          </ResponsiveContainer>
+        </GlassCard>
+      </Box>
+    </Box>
   );
-};
-
-export default Inicio;
+}
