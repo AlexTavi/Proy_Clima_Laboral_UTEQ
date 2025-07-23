@@ -33,7 +33,7 @@ const NuevoFormulario = () => {
   const [puestosExtra, setPuestosExtra] = useState([]);
   const [adscripcionesSeleccionadas, setAdscripcionesSeleccionadas] = useState([]);
   const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
-  const [additionalquestions, setAdditionalQuestions] = useState([]);
+  const [additionalQuestions, setAdditionalQuestions] = useState([]);
   const [newQuestionType, setNewQuestionType] = useState('open');
 
   const [formData, setFormData] = useState({
@@ -125,7 +125,7 @@ const NuevoFormulario = () => {
       return;
     }
 
-    const hasEmptyAnswers = additionalquestions.some((q, index) => {
+    const hasEmptyAnswers = additionalQuestions.some((q, index) => {
       if (!answers[index]) return true;
       if (q.type === 'multiple' && !answers[index].selectedOption) return true;
       return q.type !== 'multiple' && !answers[index].answer;
@@ -156,7 +156,7 @@ const NuevoFormulario = () => {
         giro: giroFinal,
         estructura: estructuraFinal,
         adscripciones: adscripcionesFinales,
-        additionalquestions,
+        additionalQuestions,
         answers,
       };
 
@@ -170,22 +170,6 @@ const NuevoFormulario = () => {
         },
         body: JSON.stringify(payload),
       });
-
-      // const res = await fetch(apiUrl+'api/forms', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({
-      //     ...formData,
-      //     giro: giroFinal,
-      //     estructura: estructuraFinal,
-      //     adscripciones: adscripcionesFinales,
-      //     additionalquestions,
-      //     answers,
-      //   }),
-      // });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -642,7 +626,7 @@ const NuevoFormulario = () => {
             </Typography>
             <Box component="form" display="flex" flexDirection="column" gap={3}>
 
-              {additionalquestions.map((question, index) => (
+              {additionalQuestions.map((question, index) => (
                 <box key={index} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2, mb: 3 }}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
                     <Chip
@@ -679,7 +663,7 @@ const NuevoFormulario = () => {
                   <TextField
                       value={question.text}
                       onChange={(e) => {
-                        const updatedQuestions = [...additionalquestions];
+                        const updatedQuestions = [...additionalQuestions];
                         updatedQuestions[index].text = e.target.value;
                         setAdditionalQuestions(updatedQuestions);
                       }}
@@ -746,7 +730,7 @@ const NuevoFormulario = () => {
                               <TextField
                                   value={option}
                                   onChange={(e) => {
-                                    const updatedQuestions = [...additionalquestions];
+                                    const updatedQuestions = [...additionalQuestions];
                                     updatedQuestions[index].options[optIndex] = e.target.value;
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -760,7 +744,7 @@ const NuevoFormulario = () => {
                                   size="small"
                                   variant="outlined"
                                   onClick={() => {
-                                    const updatedQuestions = [...additionalquestions];
+                                    const updatedQuestions = [...additionalQuestions];
                                     updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -775,7 +759,7 @@ const NuevoFormulario = () => {
                             size="small"
                             variant="contained"
                             onClick={() => {
-                              const updatedQuestions = [...additionalquestions];
+                              const updatedQuestions = [...additionalQuestions];
                               updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
                               setAdditionalQuestions(updatedQuestions);
                             }}
@@ -812,7 +796,7 @@ const NuevoFormulario = () => {
                         type: newQuestionType,
                         ...(newQuestionType === "multiple" ? { options: [""] } : {}),
                       };
-                      setAdditionalQuestions([...additionalquestions, newQuestion]);
+                      setAdditionalQuestions([...additionalQuestions, newQuestion]);
                     }}
                     sx={{ textTransform: "none", fontWeight: 600 }}
                 >
