@@ -15,6 +15,7 @@ import {
   Checkbox,
   FormGroup, Stack, FormControlLabel, Button, IconButton, Chip
 } from "@mui/material";
+import {toast, Toaster} from "react-hot-toast";
 
 
 const NuevoFormulario = () => {
@@ -116,7 +117,7 @@ const NuevoFormulario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const hasEmptyQuestions = additionalquestions.some(q =>
+    const hasEmptyQuestions = additionalQuestions.some(q =>
       !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
     );
 
@@ -170,6 +171,10 @@ const NuevoFormulario = () => {
         },
         body: JSON.stringify(payload),
       });
+      const data = await res.json();
+      if (!data.success) {
+        toast.error(data.message);
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -811,6 +816,7 @@ const NuevoFormulario = () => {
           </div>
         </form>
       </main>
+      <Toaster position="top-right" />
     </div>
   );
 };
