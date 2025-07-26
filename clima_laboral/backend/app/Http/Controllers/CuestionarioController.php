@@ -12,6 +12,23 @@ use Illuminate\Validation\ValidationException;
 
 class CuestionarioController extends Controller
 {
+    public function index()
+    {
+        $cuestionarios = Cuestionario::with('cuestionario_empresa')
+            ->get()
+            ->map(function($c) {
+                return [
+                    'id_cuestionario' => $c->id_cuestionario,
+                    'nom_empresa' => $c->cuestionario_empresa ? $c->cuestionario_empresa->nom_empresa : null,
+                    'tipo' => $c->tipo,
+                    'created_at' => $c->fecha_creacion,
+                    'updated_at' => $c->updated_at
+                ];
+            });
+
+        return response()->json($cuestionarios);
+    }
+
     public function getCuestionarioEdit(Request $request)
     {
         $id_cuestionario = $request->input('id_cuestionario');
@@ -25,7 +42,7 @@ class CuestionarioController extends Controller
         $dimensiones = Dimension::all(['id_dimension', 'nombre']);
         // Catálogo de escalas
         $escalas = Escala::all(['id_escala', 'nombre']);
-//        dd($cuestionario->cuestionario_cr);
+        //dd($cuestionario->cuestionario_cr);
 
 
         // Estructura para frontend
