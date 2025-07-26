@@ -3,7 +3,7 @@
 use App\Http\Controllers\EmpresaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\FormularioController;
+use App\Http\Controllers\CuestionarioController;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -15,6 +15,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/forms', [EmpresaController::class, 'store']);
     Route::get('/forms', [EmpresaController::class, 'index']);
     Route::post('/destroy/empresa', [EmpresaController::class, 'destroy']);
+    Route::get('/cuestionario/edit', [CuestionarioController::class, 'getCuestionarioEdit']);
+    Route::put('/update/reactivo', [CuestionarioController::class, 'update']);
 
     // Aquí irían otras rutas que SÍ requieran autenticación
     // Ejemplo: Route::get('/user-forms', [FormularioController::class, 'index']);

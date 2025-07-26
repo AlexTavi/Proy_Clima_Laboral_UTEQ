@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cuestionario_reactivo extends Model
 {
-    protected $table = 'cuestionarios';
+    protected $table = 'cuestionario_reactivos';
     protected $primaryKey = 'id_cuestionario';
     public $incrementing = true;
     protected $keyType = 'int';
