@@ -31,6 +31,7 @@ class CuestionarioController extends Controller
         // Estructura para frontend
         $preguntas = $cuestionario->cuestionario_cr->map(function($cr) {
             return [
+                'id_cr' => $cr->id_cr,
                 'id_cuestionario' => $cr->id_cuestionario,
                 'id_reactivo' => $cr->id_reactivo,
                 'pregunta' => $cr->cr_reactivo?->pregunta,
@@ -51,21 +52,20 @@ class CuestionarioController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id_cr)
     {
-        $id = $request->input('id_empresa');
-        // Encuentra el registro de la tabla pivote
-        $cuestionarioReactivo = Cuestionario_reactivo::findOrFail($id);
+        // Buscar el registro pivote
+        $cuestionarioReactivo = Cuestionario_reactivo::findOrFail($id_cr);
 
-        // Actualiza la escala (en tabla pivote)
+        // Actualizar escala si viene en la petición
         if ($request->has('id_escala')) {
             $cuestionarioReactivo->id_escala = $request->input('id_escala');
         }
         $cuestionarioReactivo->save();
 
-        // Actualiza la pregunta y dimensión en la tabla reactivos
-        if ($request->has('pregunta') || $request->has('id_dimension')) {
-            $reactivo = $cuestionarioReactivo->reactivo;
+        // Actualizar datos del reactivo (pregunta y dimensión) si vienen en la petición
+        if ($cuestionarioReactivo->cr_reactivo) {
+            $reactivo = $cuestionarioReactivo->cr_reactivo;
             if ($request->has('pregunta')) {
                 $reactivo->pregunta = $request->input('pregunta');
             }
@@ -75,7 +75,11 @@ class CuestionarioController extends Controller
             $reactivo->save();
         }
 
-        return response()->json(['success' => true, 'message' => 'Pregunta actualizada correctamente']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Pregunta actualizada correctamente'
+        ]);
     }
+
 
 }
