@@ -14,6 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/forms', [EmpresaController::class, 'store']);
     Route::get('/forms', [EmpresaController::class, 'index']);
+    Route::post('/destroy/empresa', [EmpresaController::class, 'destroy']);
 
     // Aquí irían otras rutas que SÍ requieran autenticación
     // Ejemplo: Route::get('/user-forms', [FormularioController::class, 'index']);

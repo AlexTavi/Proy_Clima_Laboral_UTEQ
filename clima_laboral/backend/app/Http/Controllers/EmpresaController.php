@@ -104,4 +104,34 @@ class EmpresaController extends Controller
             ], 500);
         }
     }
+    public function destroy(Request $request)
+    {
+        $id_empresa = $request->input('id_empresa');
+        try {
+            $empresa = Empresa::find($id_empresa);
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada'
+                ], 200);
+            }
+
+            $empresa->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empresa eliminada correctamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al eliminar empresa: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar empresa'
+            ], 500);
+        }
+    }
+
 }
