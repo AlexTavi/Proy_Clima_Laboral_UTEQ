@@ -13,24 +13,27 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+const token = localStorage.getItem('token');
+
 // ✅ Simulación de envío a Rasa
 async function handleNuevoFormulario(formulario) {
-  try {
-    const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: `usuario_${formulario.id_cuestionario}`,
-        message: "Nuevo formulario de empresa",
-        metadata: { formulario },
-      }),
-    });
-    const data = await response.json();
-    const respuestaIA = data.map((msg) => msg.text).filter(Boolean).join("\n");
-    alert(respuestaIA || "Rasa procesó los datos correctamente.");
-  } catch {
-    alert("Error enviando a la IA.");
-  }
+  // try {
+  //   const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       sender: `usuario_${formulario.id_cuestionario}`,
+  //       message: "Nuevo formulario de empresa",
+  //       metadata: { formulario },
+  //     }),
+  //   });
+  //   const data = await response.json();
+  //   const respuestaIA = data.map((msg) => msg.text).filter(Boolean).join("\n");
+  //   alert(respuestaIA || "Rasa procesó los datos correctamente.");
+  // } catch {
+  //   alert("Error enviando a la IA.");
+  // }
 }
 
 export default function Formulario() {
@@ -42,7 +45,9 @@ export default function Formulario() {
   useEffect(() => {
     const fetchCuestionarios = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8001/api/cuestionarios");
+        const res = await fetch(apiUrl+"api/cuestionarios", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         console.log("🔍 Datos crudos del backend:", data); // 👈 Agregado
 

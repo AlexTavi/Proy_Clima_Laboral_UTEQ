@@ -17,6 +17,9 @@ import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import GlassCard from "../componentes/GlassCard";
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+const token = localStorage.getItem('token');
+
 export default function FormularioDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,9 +34,12 @@ export default function FormularioDetalle() {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8001/api/cuestionario/edit", {
+        const res = await fetch(apiUrl+"api/cuestionario/edit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ id_cuestionario: parseInt(id) }),
         });
         const data = await res.json();
@@ -55,10 +61,13 @@ export default function FormularioDetalle() {
     const p = preguntas[index];
     try {
       const res = await fetch(
-        `http://127.0.0.1:8001/api/update-reactivos/${p.id_cr}`,
+          apiUrl+`api/update-reactivos/${p.id_cr}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({
             pregunta: p.pregunta,
             id_dimension: p.id_dimension,
@@ -93,9 +102,10 @@ export default function FormularioDetalle() {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:8001/api/delete-reactivos/${p.id_cr}`,
+          apiUrl+`api/delete-reactivos/${p.id_cr}`,
         {
           method: "DELETE",
+          headers: {Authorization: `Bearer ${token}`}
         }
       );
 
