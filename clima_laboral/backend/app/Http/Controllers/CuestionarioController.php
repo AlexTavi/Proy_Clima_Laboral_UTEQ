@@ -97,6 +97,31 @@ class CuestionarioController extends Controller
             'message' => 'Pregunta actualizada correctamente'
         ]);
     }
+    public function destroyReactivo($id_cr)
+    {
+        try {
+            $reactivo = Cuestionario_reactivo::find($id_cr);
+
+            if (!$reactivo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => ' Reactivo no encontrado.'
+                ], 404);
+            }
+
+            $reactivo->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Pregunta eliminada correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => ' Error al eliminar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 
 }
