@@ -20,30 +20,62 @@ function resumenEstructura(estructura) {
         .join(', ');
 }
 // ✅ Mandar datos a Rasa con manejo de errores y respuesta real
+
 async function handleNuevoFormulario(empresa) {
-    if (!empresa || !empresa.id_empresa) {
-        console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
-        alert("No hay datos válidos para enviar a la IA.");
-        return;
-    }
-
-    console.log("🚀 Enviando datos a Rasa:", JSON.stringify({
-        sender: `usuario_${empresa.id_empresa}`,
-        message: "Nuevo formulario de empresa", // Dispara el intent `nuevo_formulario`
-        metadata: { empresa }
-    }, null, 2));
-
     try {
+        // ✅ 1. Validar datos de empresa
+        if (!empresa || !empresa.id_empresa) {
+            console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
+            Swal.fire({
+                title: "❌ Datos inválidos",
+                text: "No hay datos válidos para enviar a la IA.",
+                icon: "error",
+                confirmButtonText: "Entendido"
+            });
+            return;
+        }
+
+        // ✅ 2. Elegir tipo de cuestionario (interfaz más bonita)
+        const { value: tipoConfirmado } = await Swal.fire({
+            title: "Elige el tipo de cuestionario",
+            text: "¿Quieres generar un cuestionario NOM‑035 o uno General?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "✅ NOM‑035",
+            cancelButtonText: "📋 General",
+            reverseButtons: true
+        });
+
+        const tipo = tipoConfirmado ? "nom035" : "general";
+
+        // ✅ 3. Definir mensaje según tipo
+        const mensajeIA = tipo === "nom035" 
+            ? "Nuevo formulario NOM035"
+            : "Nuevo formulario de empresa";
+
+        const payload = {
+            sender: `usuario_${empresa.id_empresa}`,
+            message: mensajeIA,
+            metadata: { empresa }
+        };
+
+        console.log("🚀 Enviando datos a Rasa:", JSON.stringify(payload, null, 2));
+
+        // ✅ 4. Mostrar un loader mientras se procesa
+        Swal.fire({
+            title: "⏳ Generando cuestionario...",
+            text: "Por favor espera mientras procesamos la solicitud.",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // ✅ 5. Enviar datos a Rasa
         const response = await fetch("http://194.195.86.4:5005/webhooks/rest/webhook", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                sender: `usuario_${empresa.id_empresa}`, 
-                message: "Nuevo formulario de empresa",
-                metadata: { empresa }
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
@@ -53,15 +85,31 @@ async function handleNuevoFormulario(empresa) {
         const data = await response.json();
         console.log("✅ Respuesta de Rasa:", data);
 
-        // 🔥 Mostrar la respuesta real de Rasa
+        // ✅ 6. Construir respuesta para mostrar al usuario
         const respuestaIA = data.map(msg => msg.text).filter(Boolean).join("\n");
-        alert(respuestaIA || "Rasa procesó los datos correctamente.");
+
+        Swal.fire({
+            title: "📋 Cuestionario Generado",
+            text: respuestaIA || "Rasa procesó los datos correctamente.",
+            icon: "success",
+            confirmButtonText: "Aceptar"
+        });
 
     } catch (error) {
         console.error("❌ Error al enviar a Rasa:", error);
-        alert("Hubo un problema al enviar los datos a la IA. Revisa la consola.");
+        Swal.fire({
+            title: "❌ Error",
+            text: "Hubo un problema al enviar los datos a la IA. Revisa la consola.",
+            icon: "error",
+            confirmButtonText: "Entendido"
+        });
     }
 }
+
+
+
+
+
 
 export default function Empresas() {
     const [rows, setRows] = useState([]);
