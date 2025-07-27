@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
-import { FaBars, FaCheck, FaInfoCircle, FaHandHolding,FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, 
-         FaList, FaBuilding, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt} from "react-icons/fa";
+import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaBuilding, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
 
@@ -20,6 +19,7 @@ import Formulario from "./paginas/Formulario.jsx"; // ✅ Importación correcta
 import './App.scss';
 import logo from '../imagen.jpg';
 import Beneficios from "./paginas/Beneficios.jsx";
+import {Toaster} from "react-hot-toast";
 import FormularioDetalle from "./paginas/FormularioDetalle.jsx";
 
 // ✅ Componente interno para manejar Sidebar + Rutas
@@ -255,14 +255,15 @@ function AppContent() {
               <Route path="/forms/new" element={<NuevoFormulario />} />
               <Route path="/registros" element={<Empresas />} />
               <Route path="/formularios" element={<Formulario />} />
-              <Route path="/formulario/:id" element={<FormularioDetalle />} />          
+              <Route path="/formulario/:id" element={<FormularioDetalle />} />
             </Routes>
           </div>
         </div>
 
-        {!user && <Footer />}
-      </main>
-    </div>
+            {!user && (<Footer />)}
+        </main>
+          <Toaster position="bottom-right" />
+      </div>
   );
 }
 

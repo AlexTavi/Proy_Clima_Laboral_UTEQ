@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import {TextField, Box, CircularProgress, Tooltip, IconButton} from '@mui/material';
+import React, {useEffect, useState} from 'react';
+import {DataGrid} from '@mui/x-data-grid';
+import {Box, CircularProgress, IconButton, TextField, Tooltip} from '@mui/material';
 import PostAddIcon from '@mui/icons-material/PostAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import {esES} from '@mui/x-data-grid/locales';
+import {toast} from "react-hot-toast";
+import Swal from "sweetalert2";
+
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
+const token = localStorage.getItem('token');
+
 
 // Utilidad para mostrar estructura como string
 function resumenEstructura(estructura) {
@@ -28,7 +34,7 @@ async function handleNuevoFormulario(empresa) {
     }, null, 2));
 
     try {
-        const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+        const response = await fetch("http://194.195.86.4:5005/webhooks/rest/webhook", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -57,23 +63,19 @@ async function handleNuevoFormulario(empresa) {
     }
 }
 
-
-
-
 export default function Empresas() {
     const [rows, setRows] = useState([]);
-    const [search, setSearch] = useState('');
+    const [search] = useState('');
     const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(false);
 
     // Fetch datos del backend
     useEffect(() => {
-        const token = localStorage.getItem('token');
         fetch(apiUrl+'api/forms', {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then(res => res.json())
             .then(data => {
-                console.log(data);
                 const rowsConId = data.data.map(row => ({
                     ...row,
                     id: row.id_empresa
@@ -82,13 +84,70 @@ export default function Empresas() {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, []);
+    }, [reload]);
 
-    // Filtro local (por nombre, giro, responsable, etc.)
+    async function handleEliminar(empresa) {
+        if (!empresa || !empresa.id_empresa) {
+            console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
+            alert("No hay datos válidos para enviar a la IA.");
+            return;
+        }
+        const id_empresa = empresa.id_empresa;
+
+        const { value: clave, isConfirmed } = await Swal.fire({
+            title: '¿Eliminar empresa?',
+            text: "Para eliminar, escribe la clave 12345",
+            input: 'password',
+            inputLabel: 'Clave de confirmación',
+            inputPlaceholder: 'Escribe 12345 para continuar',
+            showCancelButton: true,
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: (inputValue) => {
+                if (inputValue !== '12345') {
+                    Swal.showValidationMessage('Clave incorrecta. Intenta de nuevo.');
+                    return false;
+                }
+                return true;
+            }
+        });
+        if (!isConfirmed) {
+            toast('Eliminación cancelada');
+            return;
+        }
+
+        try {
+            const response = await fetch(apiUrl + "api/destroy/empresa", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_empresa: id_empresa
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            }
+            const data = await response.json();
+            console.log(data)
+            if (data.success) {
+                toast.success(data.message);
+                setReload(r => !r);
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("❌ Error al enviar a servidor:", error);
+            toast.error("Ocurrió un error al intentar eliminar la empresa.");
+        }
+    }
+
     const filteredRows = rows.filter(row =>
-        row.nom_empresa?.toLowerCase().includes(search.toLowerCase()) ||
-        row.giro?.toLowerCase().includes(search.toLowerCase()) ||
-        row.responsable?.toLowerCase().includes(search.toLowerCase())
+        row.nom_empresa?.toLowerCase().includes(search.toLowerCase())
     );
 
     const columns = [
@@ -104,8 +163,8 @@ export default function Empresas() {
             headerName: 'Estructura',
             width: 220,
             valueGetter: (params) =>
-                params.row && params.row.estructura
-                    ? resumenEstructura(params.row.estructura)
+                params && params
+                    ? resumenEstructura(params)
                     : ''
         },
         {
@@ -113,22 +172,36 @@ export default function Empresas() {
             headerName: 'Adscripción',
             width: 140,
             valueGetter: (params) => {
-                const ads = params?.row?.adscripciones;
+                const ads = params;
                 if (Array.isArray(ads)) return ads.join(', ');
                 if (typeof ads === 'string') return ads;
                 return '';
             }
         },
         {
-            field: 'additionalquestions',
+            field: 'additionalQuestions',
             headerName: 'Preguntas adicionales',
             width: 220,
             valueGetter: (params) => {
-                const preguntas = params?.row?.additionalquestions;
+                const preguntas = params;
                 if (Array.isArray(preguntas) && preguntas.length > 0) {
-                    return preguntas.map(p =>
-                        `${p.pregunta ?? ''}: ${p.respuesta ?? ''}`
-                    ).join(' | ');
+                    return preguntas.map(p => {
+                        // Muestra el texto y si hay opciones, las concatena
+                        return p.text || '';
+                    }).join(' | ');
+                }
+                return '';
+            }
+        },
+        {
+            field: 'answers',
+            headerName: 'Respuestas',
+            width: 180,
+            valueGetter: (params) => {
+                const answers = params;
+                if (Array.isArray(answers) && answers.length > 0) {
+                    // Mostramos todos los valores posibles
+                    return answers.map(a => a.answer || a.selectedOption || '').filter(Boolean).join(' | ');
                 }
                 return '';
             }
@@ -136,11 +209,15 @@ export default function Empresas() {
         {
             field: 'created_at',
             headerName: 'Registro',
-            width: 120,
-            valueGetter: (params) =>
-                params?.row?.created_at
-                    ? new Date(params.row.created_at).toLocaleDateString()
-                    : ''
+            width: 160,
+            valueGetter: (params) => {
+                if (!params) return '';
+                return new Date(params).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            }
         },
         {
             field: 'acciones',
@@ -185,14 +262,7 @@ export default function Empresas() {
     ];
 
     return (
-        <Box sx={{ height: 600, width: '100%' }}>
-            <TextField
-                variant="outlined"
-                label="Buscar"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                sx={{ mb: 2 }}
-            />
+        <Box sx={{ height: 650, width: '100%' }}>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <CircularProgress />
@@ -234,7 +304,12 @@ export default function Empresas() {
                     pageSize={10}
                     rowsPerPageOptions={[5, 10, 20]}
                     disableSelectionOnClick
-                    autoHeight
+                    localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                    initialState={{
+                        pagination: {
+                            paginationModel: { pageSize: 25, page: 0 },
+                        },
+                    }}
                 />
             )}
         </Box>

@@ -13,8 +13,9 @@ import {
   InputLabel,
   FormControl,
   Checkbox,
-  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip
+  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip, FormHelperText
 } from "@mui/material";
+import {toast} from "react-hot-toast";
 
 
 const NuevoFormulario = () => {
@@ -24,6 +25,7 @@ const NuevoFormulario = () => {
   const [success, setSuccess] = useState(null);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
@@ -33,7 +35,7 @@ const NuevoFormulario = () => {
   const [puestosExtra, setPuestosExtra] = useState([]);
   const [adscripcionesSeleccionadas, setAdscripcionesSeleccionadas] = useState([]);
   const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
-  const [additionalquestions, setAdditionalQuestions] = useState([]);
+  const [additionalQuestions, setAdditionalQuestions] = useState([]);
   const [newQuestionType, setNewQuestionType] = useState('open');
 
   const [formData, setFormData] = useState({
@@ -116,7 +118,39 @@ const NuevoFormulario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const hasEmptyQuestions = additionalquestions.some(q =>
+    const errors = {};
+
+    // Lista de campos requeridos
+    const requiredFields = [
+      "nom_empresa", "giro",
+      "email_empresa", "responsable", "direccion",
+      "cp", "estado", "municipio"
+    ];
+
+    requiredFields.forEach(field => {
+      if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === "")) {
+        errors[field] = "Este campo es obligatorio";
+      }
+    });
+    if (girosCatalogo[formData.giro]?.length > 0) {
+      if (!formData.subGiro || formData.subGiro.trim() === "") {
+        errors.subGiro = "Selecciona una subcategoría";
+      }
+    }
+
+    if (formData.giro === "Otros") {
+      if (!formData.otroGiro || formData.otroGiro.trim() === "") {
+        errors.otroGiro = "Especifique el giro";
+      }
+    }
+
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      toast.error("Por favor complete todos los campos obligatorios.");
+      return;
+    }
+    const hasEmptyQuestions = additionalQuestions.some(q =>
       !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
     );
 
@@ -125,7 +159,7 @@ const NuevoFormulario = () => {
       return;
     }
 
-    const hasEmptyAnswers = additionalquestions.some((q, index) => {
+    const hasEmptyAnswers = additionalQuestions.some((q, index) => {
       if (!answers[index]) return true;
       if (q.type === 'multiple' && !answers[index].selectedOption) return true;
       return q.type !== 'multiple' && !answers[index].answer;
@@ -156,7 +190,7 @@ const NuevoFormulario = () => {
         giro: giroFinal,
         estructura: estructuraFinal,
         adscripciones: adscripcionesFinales,
-        additionalquestions,
+        additionalQuestions,
         answers,
       };
 
@@ -170,22 +204,10 @@ const NuevoFormulario = () => {
         },
         body: JSON.stringify(payload),
       });
-
-      // const res = await fetch(apiUrl+'api/forms', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({
-      //     ...formData,
-      //     giro: giroFinal,
-      //     estructura: estructuraFinal,
-      //     adscripciones: adscripcionesFinales,
-      //     additionalquestions,
-      //     answers,
-      //   }),
-      // });
+      const data = await res.json();
+      if (!data.success) {
+        toast.error(data.message);
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -256,6 +278,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.nom_empresa}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
 
               <TextField
@@ -268,7 +292,7 @@ const NuevoFormulario = () => {
                   onChange={handleChange}
               />
 
-              <FormControl fullWidth required>
+              <FormControl fullWidth required error={!!formErrors.giro}>
                 <InputLabel id="giro-label">Catálogo de giros</InputLabel>
                 <Select
                     labelId="giro-label"
@@ -279,6 +303,7 @@ const NuevoFormulario = () => {
                     onChange={(e) => {
                       const val = e.target.value;
                       setFormData(prev => ({ ...prev, giro: val, subGiro: '', otroGiro: '' }));
+                      setFormErrors(prev => ({ ...prev, giro: undefined }));
                     }}
                 >
                   <MenuItem value="">
@@ -290,10 +315,13 @@ const NuevoFormulario = () => {
                       </MenuItem>
                   ))}
                 </Select>
+                {formErrors.giro && (
+                    <FormHelperText>{formErrors.giro}</FormHelperText>
+                )}
               </FormControl>
 
               {girosCatalogo[formData.giro]?.length > 0 && (
-                  <FormControl fullWidth required margin="normal">
+                  <FormControl fullWidth required margin="normal" error={!!formErrors.subGiro}>
                     <InputLabel id="subGiro-label">Subcategoría</InputLabel>
                     <Select
                         labelId="subGiro-label"
@@ -304,10 +332,13 @@ const NuevoFormulario = () => {
                         onChange={handleChange}
                     >
                       <MenuItem value="">-- Selecciona una subcategoría --</MenuItem>
-                      {girosCatalogo[formData.giro].map(sub => (
+                      {(girosCatalogo[formData.giro] || []).map(sub => (
                           <MenuItem key={sub} value={sub}>{sub}</MenuItem>
                       ))}
                     </Select>
+                    {formErrors.subGiro && (
+                        <FormHelperText>{formErrors.subGiro}</FormHelperText>
+                    )}
                   </FormControl>
               )}
 
@@ -321,6 +352,8 @@ const NuevoFormulario = () => {
                       fullWidth
                       required
                       margin="normal"
+                      error={!!formErrors.otroGiro}
+                      helperText={formErrors.otroGiro}
                   />
               )}
 
@@ -397,6 +430,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.email_empresa}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="responsable"
@@ -407,6 +442,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.responsable}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="direccion"
@@ -417,6 +454,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.direccion}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="num"
@@ -436,6 +475,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.cp}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="estado"
@@ -446,6 +487,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.estado}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="municipio"
@@ -456,6 +499,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.municipio}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
             </Box>
           </GlassCard>
@@ -642,7 +687,7 @@ const NuevoFormulario = () => {
             </Typography>
             <Box component="form" display="flex" flexDirection="column" gap={3}>
 
-              {additionalquestions.map((question, index) => (
+              {additionalQuestions.map((question, index) => (
                 <box key={index} sx={{ p: 2, border: "1px solid #eee", borderRadius: 2, mb: 3 }}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
                     <Chip
@@ -679,7 +724,7 @@ const NuevoFormulario = () => {
                   <TextField
                       value={question.text}
                       onChange={(e) => {
-                        const updatedQuestions = [...additionalquestions];
+                        const updatedQuestions = [...additionalQuestions];
                         updatedQuestions[index].text = e.target.value;
                         setAdditionalQuestions(updatedQuestions);
                       }}
@@ -746,7 +791,7 @@ const NuevoFormulario = () => {
                               <TextField
                                   value={option}
                                   onChange={(e) => {
-                                    const updatedQuestions = [...additionalquestions];
+                                    const updatedQuestions = [...additionalQuestions];
                                     updatedQuestions[index].options[optIndex] = e.target.value;
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -760,7 +805,7 @@ const NuevoFormulario = () => {
                                   size="small"
                                   variant="outlined"
                                   onClick={() => {
-                                    const updatedQuestions = [...additionalquestions];
+                                    const updatedQuestions = [...additionalQuestions];
                                     updatedQuestions[index].options = updatedQuestions[index].options.filter((_, i) => i !== optIndex);
                                     setAdditionalQuestions(updatedQuestions);
                                   }}
@@ -775,7 +820,7 @@ const NuevoFormulario = () => {
                             size="small"
                             variant="contained"
                             onClick={() => {
-                              const updatedQuestions = [...additionalquestions];
+                              const updatedQuestions = [...additionalQuestions];
                               updatedQuestions[index].options = [...(updatedQuestions[index].options || []), ''];
                               setAdditionalQuestions(updatedQuestions);
                             }}
@@ -812,7 +857,7 @@ const NuevoFormulario = () => {
                         type: newQuestionType,
                         ...(newQuestionType === "multiple" ? { options: [""] } : {}),
                       };
-                      setAdditionalQuestions([...additionalquestions, newQuestion]);
+                      setAdditionalQuestions([...additionalQuestions, newQuestion]);
                     }}
                     sx={{ textTransform: "none", fontWeight: 600 }}
                 >
@@ -823,7 +868,7 @@ const NuevoFormulario = () => {
           </GlassCard>
 
           <div className="form-actions">
-            <button type="submit" className="submit-button">Guardar Formulario</button>
+            <button type="submit" className="submit-button">Guardar Empresa</button>
           </div>
         </form>
       </main>
