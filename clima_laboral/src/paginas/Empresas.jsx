@@ -5,6 +5,8 @@ import PostAddIcon from '@mui/icons-material/PostAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {esES} from '@mui/x-data-grid/locales';
+import {toast} from "react-hot-toast";
+import Swal from "sweetalert2";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
@@ -61,50 +63,11 @@ async function handleNuevoFormulario(empresa) {
     }
 }
 
-async function handleEliminar(empresa) {
-    if (!empresa || !empresa.id_empresa) {
-        console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
-        alert("No hay datos válidos para enviar a la IA.");
-        return;
-    }
-    const id_empresa = empresa.id_empresa;
-
-    try {
-        const response = await fetch(apiUrl + "api/destroy", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id_empresa: id_empresa
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("✅ Respuesta de Rasa:", data);
-
-        // 🔥 Mostrar la respuesta real de Rasa
-        const respuestaIA = data.map(msg => msg.text).filter(Boolean).join("\n");
-        alert(respuestaIA || "Rasa procesó los datos correctamente.");
-
-    } catch (error) {
-        console.error("❌ Error al enviar a Rasa:", error);
-        alert("Hubo un problema al enviar los datos a la IA. Revisa la consola.");
-    }
-}
-
-
-
-
 export default function Empresas() {
     const [rows, setRows] = useState([]);
     const [search] = useState('');
     const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(false);
 
     // Fetch datos del backend
     useEffect(() => {
@@ -121,7 +84,67 @@ export default function Empresas() {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, []);
+    }, [reload]);
+
+    async function handleEliminar(empresa) {
+        if (!empresa || !empresa.id_empresa) {
+            console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
+            alert("No hay datos válidos para enviar a la IA.");
+            return;
+        }
+        const id_empresa = empresa.id_empresa;
+
+        const { value: clave, isConfirmed } = await Swal.fire({
+            title: '¿Eliminar empresa?',
+            text: "Para eliminar, escribe la clave 12345",
+            input: 'password',
+            inputLabel: 'Clave de confirmación',
+            inputPlaceholder: 'Escribe 12345 para continuar',
+            showCancelButton: true,
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: (inputValue) => {
+                if (inputValue !== '12345') {
+                    Swal.showValidationMessage('Clave incorrecta. Intenta de nuevo.');
+                    return false;
+                }
+                return true;
+            }
+        });
+        if (!isConfirmed) {
+            toast('Eliminación cancelada');
+            return;
+        }
+
+        try {
+            const response = await fetch(apiUrl + "api/destroy/empresa", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id_empresa: id_empresa
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            }
+            const data = await response.json();
+            console.log(data)
+            if (data.success) {
+                toast.success(data.message);
+                setReload(r => !r);
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("❌ Error al enviar a servidor:", error);
+            toast.error("Ocurrió un error al intentar eliminar la empresa.");
+        }
+    }
 
     const filteredRows = rows.filter(row =>
         row.nom_empresa?.toLowerCase().includes(search.toLowerCase())
@@ -239,7 +262,7 @@ export default function Empresas() {
     ];
 
     return (
-        <Box sx={{ height: 600, width: '100%' }}>
+        <Box sx={{ height: 650, width: '100%' }}>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <CircularProgress />

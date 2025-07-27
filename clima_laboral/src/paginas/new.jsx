@@ -13,9 +13,9 @@ import {
   InputLabel,
   FormControl,
   Checkbox,
-  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip
+  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip, FormHelperText
 } from "@mui/material";
-import {toast, Toaster} from "react-hot-toast";
+import {toast} from "react-hot-toast";
 
 
 const NuevoFormulario = () => {
@@ -25,6 +25,7 @@ const NuevoFormulario = () => {
   const [success, setSuccess] = useState(null);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
@@ -117,6 +118,38 @@ const NuevoFormulario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const errors = {};
+
+    // Lista de campos requeridos
+    const requiredFields = [
+      "nom_empresa", "giro",
+      "email_empresa", "responsable", "direccion",
+      "cp", "estado", "municipio"
+    ];
+
+    requiredFields.forEach(field => {
+      if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === "")) {
+        errors[field] = "Este campo es obligatorio";
+      }
+    });
+    if (girosCatalogo[formData.giro]?.length > 0) {
+      if (!formData.subGiro || formData.subGiro.trim() === "") {
+        errors.subGiro = "Selecciona una subcategoría";
+      }
+    }
+
+    if (formData.giro === "Otros") {
+      if (!formData.otroGiro || formData.otroGiro.trim() === "") {
+        errors.otroGiro = "Especifique el giro";
+      }
+    }
+
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      toast.error("Por favor complete todos los campos obligatorios.");
+      return;
+    }
     const hasEmptyQuestions = additionalQuestions.some(q =>
       !q.text || (q.type === 'multiple' && (q.options.length === 0 || q.options.some(o => !o)))
     );
@@ -245,6 +278,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.nom_empresa}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
 
               <TextField
@@ -257,7 +292,7 @@ const NuevoFormulario = () => {
                   onChange={handleChange}
               />
 
-              <FormControl fullWidth required>
+              <FormControl fullWidth required error={!!formErrors.giro}>
                 <InputLabel id="giro-label">Catálogo de giros</InputLabel>
                 <Select
                     labelId="giro-label"
@@ -268,6 +303,7 @@ const NuevoFormulario = () => {
                     onChange={(e) => {
                       const val = e.target.value;
                       setFormData(prev => ({ ...prev, giro: val, subGiro: '', otroGiro: '' }));
+                      setFormErrors(prev => ({ ...prev, giro: undefined }));
                     }}
                 >
                   <MenuItem value="">
@@ -279,10 +315,13 @@ const NuevoFormulario = () => {
                       </MenuItem>
                   ))}
                 </Select>
+                {formErrors.giro && (
+                    <FormHelperText>{formErrors.giro}</FormHelperText>
+                )}
               </FormControl>
 
               {girosCatalogo[formData.giro]?.length > 0 && (
-                  <FormControl fullWidth required margin="normal">
+                  <FormControl fullWidth required margin="normal" error={!!formErrors.subGiro}>
                     <InputLabel id="subGiro-label">Subcategoría</InputLabel>
                     <Select
                         labelId="subGiro-label"
@@ -293,10 +332,13 @@ const NuevoFormulario = () => {
                         onChange={handleChange}
                     >
                       <MenuItem value="">-- Selecciona una subcategoría --</MenuItem>
-                      {girosCatalogo[formData.giro].map(sub => (
+                      {(girosCatalogo[formData.giro] || []).map(sub => (
                           <MenuItem key={sub} value={sub}>{sub}</MenuItem>
                       ))}
                     </Select>
+                    {formErrors.subGiro && (
+                        <FormHelperText>{formErrors.subGiro}</FormHelperText>
+                    )}
                   </FormControl>
               )}
 
@@ -310,6 +352,8 @@ const NuevoFormulario = () => {
                       fullWidth
                       required
                       margin="normal"
+                      error={!!formErrors.otroGiro}
+                      helperText={formErrors.otroGiro}
                   />
               )}
 
@@ -386,6 +430,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.email_empresa}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="responsable"
@@ -396,6 +442,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.responsable}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="direccion"
@@ -406,6 +454,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.direccion}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="num"
@@ -425,6 +475,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.cp}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="estado"
@@ -435,6 +487,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.estado}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
               <TextField
                   id="municipio"
@@ -445,6 +499,8 @@ const NuevoFormulario = () => {
                   required
                   value={formData.municipio}
                   onChange={handleChange}
+                  error={!!formErrors.nom_empresa}
+                  helperText={formErrors.nom_empresa}
               />
             </Box>
           </GlassCard>
@@ -812,11 +868,10 @@ const NuevoFormulario = () => {
           </GlassCard>
 
           <div className="form-actions">
-            <button type="submit" className="submit-button">Guardar Formulario</button>
+            <button type="submit" className="submit-button">Guardar Empresa</button>
           </div>
         </form>
       </main>
-      <Toaster position="top-right" />
     </div>
   );
 };

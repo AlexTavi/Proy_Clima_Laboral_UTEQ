@@ -1,6 +1,6 @@
 import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
-import { useState } from "react";
+import React, { useState } from "react";
 import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaBuilding, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
@@ -18,6 +18,7 @@ import Empresas from "./paginas/Empresas.jsx";
 import './App.scss';
 import logo from '../imagen.jpg';
 import Beneficios from "./paginas/Beneficios.jsx";
+import {Toaster} from "react-hot-toast";
 
 // Componente interno para usar useLocation
 function AppContent() {
@@ -281,6 +282,7 @@ function AppContent() {
 
             {!user && (<Footer />)}
         </main>
+          <Toaster position="bottom-right" />
       </div>
   );
 }
