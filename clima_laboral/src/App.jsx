@@ -20,6 +20,7 @@ import Formulario from "./paginas/Formulario.jsx"; // ✅ Importación correcta
 import './App.scss';
 import logo from '../imagen.jpg';
 import Beneficios from "./paginas/Beneficios.jsx";
+import FormularioDetalle from "./paginas/FormularioDetalle.jsx";
 
 // ✅ Componente interno para manejar Sidebar + Rutas
 function AppContent() {
@@ -254,6 +255,7 @@ function AppContent() {
               <Route path="/forms/new" element={<NuevoFormulario />} />
               <Route path="/registros" element={<Empresas />} />
               <Route path="/formularios" element={<Formulario />} />
+              <Route path="/formulario/:id" element={<FormularioDetalle />} />          
             </Routes>
           </div>
         </div>
