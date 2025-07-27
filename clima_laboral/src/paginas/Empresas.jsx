@@ -34,7 +34,7 @@ async function handleNuevoFormulario(empresa) {
     }, null, 2));
 
     try {
-        const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+        const response = await fetch("http://194.195.86.4:5005/webhooks/rest/webhook", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
