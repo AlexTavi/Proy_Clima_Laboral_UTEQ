@@ -16,25 +16,67 @@ import { useNavigate } from "react-router-dom";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
 
-// ✅ Simulación de envío a Rasa
-async function handleNuevoFormulario(formulario) {
-  // try {
-  //   const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({
-  //       sender: `usuario_${formulario.id_cuestionario}`,
-  //       message: "Nuevo formulario de empresa",
-  //       metadata: { formulario },
-  //     }),
-  //   });
-  //   const data = await response.json();
-  //   const respuestaIA = data.map((msg) => msg.text).filter(Boolean).join("\n");
-  //   alert(respuestaIA || "Rasa procesó los datos correctamente.");
-  // } catch {
-  //   alert("Error enviando a la IA.");
-  // }
-}
+const handleAplicar = async (row) => {
+  try {
+    console.log("📌 Datos enviados a handleAplicar:", row);
+
+    if (!row.id_cuestionario || !row.id_empresa) {
+      alert("❌ No se encontró id_cuestionario o id_empresa. Verifica los datos.");
+      return;
+    }
+
+    const confirmar = confirm(
+      `¿Deseas generar tokens para el cuestionario ${row.id_cuestionario} de la empresa ${row.nom_empresa}?`
+    );
+    if (!confirmar) return;
+
+    const res = await fetch("http://194.195.86.4:8000/generar-tokens", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id_cuestionario: row.id_cuestionario,
+        id_empresa: row.id_empresa,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert(`✅ Tokens generados: ${data.tokens_generados}`);
+      console.log("🔑 Tokens generados:", data.tokens);
+
+      // ✅ Descargar Excel con tokens
+      const blob = new Blob(
+        [
+          "Token\n" +
+            data.tokens.map((t) => t).join("\n")
+        ],
+        { type: "text/csv;charset=utf-8;" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tokens_cuestionario_${row.id_cuestionario}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      // Opcional: Preguntar si redirigir al primer token
+      if (confirm("¿Quieres ir al cuestionario con el primer token?")) {
+        window.location.href = `http://194.195.86.4:8000/cuestionario?token=${data.tokens[0]}`;
+      }
+    } else {
+      alert(`❌ Error: ${data.message}`);
+    }
+  } catch (e) {
+    console.error("❌ Error en handleAplicar:", e);
+    alert("❌ No se pudo conectar con el servidor de tokens.");
+  }
+};
+
+
+
+
+
 
 export default function Formulario() {
   const [rows, setRows] = useState([]);
@@ -54,11 +96,12 @@ export default function Formulario() {
         // ✅ Confirmamos que incluimos "created_at" correctamente
         setRows(
           data.map((item) => ({
-            id: item.id_cuestionario,
-            id_cuestionario: item.id_cuestionario,
-            nom_empresa: item.nom_empresa,
-            tipo: item.tipo,
-            created_at: item.created_at || "", // aseguramos que siempre existe
+          id: item.id_cuestionario,
+          id_cuestionario: item.id_cuestionario,
+          id_empresa: item.id_empresa,       // ✅ NECESARIO
+          nom_empresa: item.nom_empresa,
+          tipo: item.tipo,
+          created_at: item.created_at || "",
           }))
         );
       } catch (error) {
@@ -133,23 +176,12 @@ export default function Formulario() {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Editar">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() =>
-                alert(`Editar cuestionario ${params.row.id_cuestionario}`)
-              }
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
 
-          <Tooltip title="Enviar a Rasa">
+          <Tooltip title="Aplicar">
             <IconButton
               size="small"
               color="secondary"
-              onClick={() => handleNuevoFormulario(params.row)}
+              onClick={() => handleAplicar(params.row)}
             >
               <PostAddIcon />
             </IconButton>
