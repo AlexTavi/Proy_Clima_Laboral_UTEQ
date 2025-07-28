@@ -19,7 +19,7 @@ class CuestionarioController extends Controller
             ->map(function($c) {
                 return [
                     'id_cuestionario' => $c->id_cuestionario,
-		    'id_empresa' => $c->id_empresa,
+		            'id_empresa' => $c->id_empresa,
                     'nom_empresa' => $c->cuestionario_empresa ? $c->cuestionario_empresa->nom_empresa : null,
                     'tipo' => $c->tipo,
                     'created_at' => $c->fecha_creacion,

@@ -19,4 +19,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cuestionario/edit', [CuestionarioController::class, 'getCuestionarioEdit']);
     Route::put('/update-reactivos/{id_cr}', [CuestionarioController::class, 'update']);
     Route::delete('/delete-reactivos/{id_cr}', [CuestionarioController::class, 'destroyReactivo']);
+    Route::get('/empresa/{id}/edit', [EmpresaController::class, 'edit']);
+    Route::put('/empresa/{id}', [EmpresaController::class, 'update']);
 });

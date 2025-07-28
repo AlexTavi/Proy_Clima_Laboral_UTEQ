@@ -134,4 +134,65 @@ class EmpresaController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        try {
+            $empresa = Empresa::find($id);
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada'
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $empresa
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error al obtener empresa: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la empresa'
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $this->sanitizeRequest($request);
+
+            $validated = $this->validateRequest($request);
+
+            $empresa = Empresa::find($id);
+
+            if (!$empresa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa no encontrada'
+                ], 404);
+            }
+
+            $empresa->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empresa actualizada correctamente',
+                'data' => $empresa
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e);
+
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar empresa: ' . $e->getMessage());
+
+            return $this->serverErrorResponse($e);
+        }
+    }
+
 }
