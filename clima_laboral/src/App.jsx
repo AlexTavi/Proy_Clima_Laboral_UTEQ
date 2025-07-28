@@ -253,6 +253,7 @@ function AppContent() {
               <Route path="/login" element={<Login />} />
               <Route path="/inicio" element={<Inicio />} />
               <Route path="/forms/new" element={<NuevoFormulario />} />
+              <Route path="/forms/edit/:id_empresa" element={<NuevoFormulario />} />
               <Route path="/registros" element={<Empresas />} />
               <Route path="/formularios" element={<Formulario />} />
               <Route path="/formulario/:id" element={<FormularioDetalle />} />

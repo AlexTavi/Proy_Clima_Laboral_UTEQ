@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import {esES} from '@mui/x-data-grid/locales';
 import {toast} from "react-hot-toast";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
@@ -106,16 +107,12 @@ async function handleNuevoFormulario(empresa) {
     }
 }
 
-
-
-
-
-
 export default function Empresas() {
     const [rows, setRows] = useState([]);
     const [search] = useState('');
     const [loading, setLoading] = useState(true);
     const [reload, setReload] = useState(false);
+    const navigate = useNavigate();
 
     // Fetch datos del backend
     useEffect(() => {
@@ -142,7 +139,7 @@ export default function Empresas() {
         }
         const id_empresa = empresa.id_empresa;
 
-        const { value: clave, isConfirmed } = await Swal.fire({
+        const { value: isConfirmed } = await Swal.fire({
             title: '¿Eliminar empresa?',
             text: "Para eliminar, escribe la clave 12345",
             input: 'password',
@@ -197,6 +194,15 @@ export default function Empresas() {
     const filteredRows = rows.filter(row =>
         row.nom_empresa?.toLowerCase().includes(search.toLowerCase())
     );
+    const handleEditar = (empresa) => {
+        if (!empresa || !empresa.id_empresa) {
+            console.error("❌ Empresa inválida para editar:", empresa);
+            return;
+        }
+
+        // Redirigir a la ruta con el ID
+        navigate(`/forms/edit/${empresa.id_empresa}`);
+    };
 
     const columns = [
         { field: 'id_empresa', headerName: 'ID', width: 80 },
@@ -310,7 +316,7 @@ export default function Empresas() {
     ];
 
     return (
-        <Box sx={{ height: 650, width: '100%' }}>
+        <Box sx={{ width: '100%' }}>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <CircularProgress />

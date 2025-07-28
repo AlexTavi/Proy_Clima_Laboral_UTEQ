@@ -37,7 +37,8 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(140, 128, 171,0.35);
+  background: rgba(255, 255, 255,0.5);
+  //background: rgba(140, 128, 171,0.35);
   z-index: 0;
   pointer-events: none;
 }
@@ -67,45 +68,6 @@ body::before {
     }
   }
 }
-
-//.sidebar-btn-wrapper {
-//  padding: 16px;
-//  display: flex;
-//  align-items: center;
-//  justify-content: center;
-//
-//  .sidebar-btn {
-//    display: flex;
-//    align-items: center;
-//    justify-content: center;
-//    padding: 8px 16px;
-//    border-radius: 8px;
-//    background: $sidebar-bg;
-//    color: $sidebar-text;
-//    border: none;
-//    cursor: pointer;
-//    transition: all 0.2s ease;
-//    gap: 8px;
-//    font-size: 14px;
-//
-//    &:hover {
-//      background-color: $border-color;
-//      color: white;
-//    }
-//
-//    // Cuando está colapsado
-//    .ps-collapsed & {
-//      padding: 8px;
-//      border-radius: 50%;
-//      width: 40px;
-//      height: 40px;
-//
-//      span {
-//        display: none;
-//      }
-//    }
-//  }
-//}
 
 .sidebar-separator {
   height: 1px;

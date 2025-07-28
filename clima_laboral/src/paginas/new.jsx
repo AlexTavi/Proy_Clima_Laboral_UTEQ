@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import GlassCard from '../componentes/GlassCard.jsx';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
@@ -19,14 +19,15 @@ import {toast} from "react-hot-toast";
 
 
 const NuevoFormulario = () => {
+  const { id_empresa } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [empleadosSeleccion, setEmpleadosSeleccion] = useState('');
   const [answers, setAnswers] = useState({});
   const [formErrors, setFormErrors] = useState({});
   const apiUrl = import.meta.env.VITE_BACKEND_URL;
+  const token = localStorage.getItem('token');
 
   const nivelesPuestos = ['Dirección', 'Gerencias', 'Jefaturas', 'Administración', 'Departamentos'];
   const adscripcionesDisponibles = ['Matriz', 'Sucursal', 'Norte', 'Sur', 'Noreste', 'Noroeste'];
@@ -65,10 +66,23 @@ const NuevoFormulario = () => {
     'Comercio': ['Tienda autoservicio', 'Tienda conveniencia', 'Tienda departamental'],
     'Otros': [],
   };
+  const inferirGiroYSubGiro = (valorGiroBD) => {
+    for (const [giro, subgiros] of Object.entries(girosCatalogo)) {
+      if (giro === valorGiroBD) {
+        return { giro: valorGiroBD, subGiro: '' };
+      }
+
+      if (subgiros.includes(valorGiroBD)) {
+        return { giro, subGiro: valorGiroBD };
+      }
+    }
+
+    // No está en el catálogo, asumir que es "Otros"
+    return { giro: 'Otros', subGiro: '', otroGiro: valorGiroBD };
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
       if (!token) return navigate('/login');
       try {
         const res = await fetch(apiUrl+'api/me', {
@@ -84,7 +98,31 @@ const NuevoFormulario = () => {
       }
     };
     fetchUserData();
-  }, [navigate]);
+
+    if(id_empresa)
+    {
+      if (!token) return navigate('/login');
+      fetch(apiUrl+`api/empresa/${id_empresa}/edit`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setFormData(data.data);
+              const { giro, subGiro, otroGiro } = inferirGiroYSubGiro(data.data.giro);
+              setFormData({
+                ...data.data,
+                giro,
+                subGiro,
+                otroGiro: otroGiro || ''
+              });
+            } else {
+              console.error("❌ No se pudo obtener la empresa:", data.message);
+            }
+          });
+    }
+
+  }, [navigate, id_empresa, token]);
 
 
   const handleChange = (e) => {
@@ -194,8 +232,6 @@ const NuevoFormulario = () => {
         answers,
       };
 
-      console.log('Payload enviado:', JSON.stringify(payload, null, 2));
-
       const res = await fetch(apiUrl+'api/forms', {
         method: 'POST',
         headers: {
@@ -207,15 +243,12 @@ const NuevoFormulario = () => {
       const data = await res.json();
       if (!data.success) {
         toast.error(data.message);
+        console.log(formData)
+        return;
+      } else {
+        toast.success("Formulario guardado con éxito.");
       }
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Error al guardar el formulario');
-      }
-
-      setSuccess("Formulario guardado con éxito.");
-      setTimeout(() => setSuccess(null), 3000);
       setFormData({
         nom_empresa: '',
         rfc_empresa: '',
@@ -255,14 +288,9 @@ const NuevoFormulario = () => {
           {error}
         </div>
       )}
-      {success && (
-        <div className="success-message" role="status">
-          {success}
-        </div>
-      )}
 
       <main className="formulario-main">
-        <h1 className="form-title">Nueva Empresa</h1>
+        <h1 className="form-title">{id_empresa ? "Editar Empresa" : "Nueva Empresa"}</h1>
         <form onSubmit={handleSubmit} className="form-grid">
           <GlassCard>
             <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
