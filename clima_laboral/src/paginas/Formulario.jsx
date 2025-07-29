@@ -30,7 +30,7 @@ const handleAplicar = async (row) => {
     );
     if (!confirmar) return;
 
-    const res = await fetch("http://194.195.86.4:8000/generar-tokens", {
+    const res = await fetch("https://encuestas.grupocrehce.com/generar-tokens", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -62,7 +62,7 @@ const handleAplicar = async (row) => {
 
       // Opcional: Preguntar si redirigir al primer token
       if (confirm("¿Quieres ir al cuestionario con el primer token?")) {
-        window.location.href = `http://194.195.86.4:8000/cuestionario?token=${data.tokens[0]}`;
+        window.location.href = `https://encuestas.grupocrehce.com/cuestionario?token=${data.tokens[0]}`;
       }
     } else {
       alert(`❌ Error: ${data.message}`);
