@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import GlassCard from '../componentes/GlassCard.jsx';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,7 +13,7 @@ import {
   InputLabel,
   FormControl,
   Checkbox,
-  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip, FormHelperText
+  FormGroup, Stack, FormControlLabel, Button, IconButton, Chip, FormHelperText, capitalize
 } from "@mui/material";
 import {toast} from "react-hot-toast";
 
@@ -38,6 +38,7 @@ const NuevoFormulario = () => {
   const [adscripcionesExtra, setAdscripcionesExtra] = useState([]);
   const [additionalQuestions, setAdditionalQuestions] = useState([]);
   const [newQuestionType, setNewQuestionType] = useState('open');
+  const yaCargado = useRef(false);
 
   const [formData, setFormData] = useState({
     nom_empresa: '',
@@ -81,48 +82,100 @@ const NuevoFormulario = () => {
     return { giro: 'Otros', subGiro: '', otroGiro: valorGiroBD };
   };
 
+  const cargarEmpresa = (empresa) => {
+    const { giro, subGiro, otroGiro } = inferirGiroYSubGiro(empresa.giro);
+
+    setFormData({
+      ...empresa,
+      giro,
+      subGiro,
+      otroGiro: otroGiro || ''
+    });
+
+    const empleadosBD = empresa.empleados;
+    const valoresPermitidos = [
+      "10-50", "51-100", "101-200", "201-300",
+      "301-400", "401-500", "501-1000"
+    ];
+    setEmpleadosSeleccion(valoresPermitidos.includes(empleadosBD) ? empleadosBD : "Otros");
+
+    const puestosBase = nivelesPuestos.map(p => p.toLowerCase());
+    const seleccionados = [];
+    const extras = [];
+
+    for (const [clave, valor] of Object.entries(empresa.estructura || {})) {
+      if (puestosBase.includes(clave)) {
+        seleccionados.push(capitalize(clave));
+      } else {
+        extras.push({ nombre: capitalize(clave), numero: valor });
+      }
+    }
+
+    setPuestosSeleccionados(seleccionados);
+    setPuestosExtra(extras);
+
+    const disponibles = adscripcionesDisponibles;
+    const adsSel = [];
+    const adsExtra = [];
+
+    (empresa.adscripciones || []).forEach((ads) => {
+      if (disponibles.includes(ads)) adsSel.push(ads);
+      else adsExtra.push(ads);
+    });
+
+    setAdscripcionesSeleccionadas(adsSel);
+    setAdscripcionesExtra(adsExtra);
+
+    if (empresa.additionalQuestions) {
+      setAdditionalQuestions(empresa.additionalQuestions);
+
+      const respuestas = {};
+      empresa.answers?.forEach((res, idx) => {
+        respuestas[idx] = res;
+      });
+      setAnswers(respuestas);
+    }
+  };
+
   useEffect(() => {
+    if (yaCargado.current) return;
+
     const fetchUserData = async () => {
       if (!token) return navigate('/login');
       try {
-        const res = await fetch(apiUrl+'api/me', {
+        const res = await fetch(apiUrl + 'api/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Token inválido');
-        // const data = await res.json();
       } catch {
         localStorage.removeItem('token');
-        navigate('/login');
+        return navigate('/login');
       } finally {
         setLoading(false);
       }
     };
+
+    const fetchEmpresa = async () => {
+      try {
+        const res = await fetch(apiUrl + `api/empresa/${id_empresa}/edit`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success) {
+          cargarEmpresa(data.data);
+        } else {
+          console.error("❌ No se pudo obtener la empresa:", data.message);
+        }
+      } catch (e) {
+        console.error("❌ Error al obtener la empresa:", e);
+      }
+    };
+
     fetchUserData();
+    if (id_empresa) fetchEmpresa();
 
-    if(id_empresa)
-    {
-      if (!token) return navigate('/login');
-      fetch(apiUrl+`api/empresa/${id_empresa}/edit`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setFormData(data.data);
-              const { giro, subGiro, otroGiro } = inferirGiroYSubGiro(data.data.giro);
-              setFormData({
-                ...data.data,
-                giro,
-                subGiro,
-                otroGiro: otroGiro || ''
-              });
-            } else {
-              console.error("❌ No se pudo obtener la empresa:", data.message);
-            }
-          });
-    }
-
-  }, [navigate, id_empresa, token]);
+    yaCargado.current = true;
+  }, [navigate, id_empresa, token, apiUrl]);
 
 
   const handleChange = (e) => {
@@ -157,6 +210,7 @@ const NuevoFormulario = () => {
     e.preventDefault();
 
     const errors = {};
+
 
     // Lista de campos requeridos
     const requiredFields = [
@@ -223,56 +277,83 @@ const NuevoFormulario = () => {
     try {
       setError(null);
       const token = localStorage.getItem('token');
+      const generarEstructuraFinal = () => {
+        const estructuraFinal = {};
+
+        // 1. Predefinidos seleccionados
+        puestosSeleccionados.forEach(puesto => {
+          const clave = puesto.toLowerCase();
+          const valor = formData.estructura?.[clave];
+          if (valor !== undefined && valor !== null && valor !== "") {
+            estructuraFinal[clave] = Number(valor);
+          }
+        });
+
+        // 2. Puestos extra (nombre personalizado + número)
+        puestosExtra.forEach(puesto => {
+          if (puesto.nombre.trim()) {
+            const clave = puesto.nombre.trim().toLowerCase();
+            estructuraFinal[clave] = Number(puesto.numero) || 0;
+          }
+        });
+
+        return estructuraFinal;
+      };
       const payload = {
         ...formData,
         giro: giroFinal,
-        estructura: estructuraFinal,
+        estructura: generarEstructuraFinal(),
         adscripciones: adscripcionesFinales,
         additionalQuestions,
         answers,
       };
 
-      const res = await fetch(apiUrl+'api/forms', {
-        method: 'POST',
+      const url = id_empresa
+          ? `${apiUrl}api/empresa/${id_empresa}`  // editar
+          : `${apiUrl}api/forms`;                 // nuevo
+
+      const metodo = id_empresa ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: metodo,
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!data.success) {
         toast.error(data.message);
-        console.log(formData)
         return;
       } else {
-        toast.success("Formulario guardado con éxito.");
+        toast.success("Empresa guardada con éxito.");
+        setFormData({
+          nom_empresa: '',
+          rfc_empresa: '',
+          direccion: '',
+          cp: '',
+          municipio: '',
+          estado: '',
+          email_empresa: '',
+          giro: '',
+          subGiro: '',
+          otroGiro: '',
+          empleados: '',
+          telefono: '',
+          responsable: '',
+          estructura: {},
+          num: '',
+        });
+        setPuestosSeleccionados([]);
+        setPuestosExtra([]);
+        setAdscripcionesSeleccionadas([]);
+        setAdscripcionesExtra([]);
+        setEmpleadosSeleccion('');
+        setAdditionalQuestions([]);
+        setAnswers({});
+        navigate('/registros');
       }
-
-      setFormData({
-        nom_empresa: '',
-        rfc_empresa: '',
-        direccion: '',
-        cp: '',
-        municipio: '',
-        estado: '',
-        email_empresa: '',
-        giro: '',
-        subGiro: '',
-        otroGiro: '',
-        empleados: '',
-        telefono: '',
-        responsable: '',
-        estructura: {},
-        num: '',
-      });
-      setPuestosSeleccionados([]);
-      setPuestosExtra([]);
-      setAdscripcionesSeleccionadas([]);
-      setAdscripcionesExtra([]);
-      setEmpleadosSeleccion('');
-      setAdditionalQuestions([]);
-      setAnswers({});
     } catch (err) {
       setError(err.message);
     }
