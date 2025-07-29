@@ -1,7 +1,23 @@
 import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
-import { FaBars, FaCheck, FaInfoCircle, FaHandHolding, FaProjectDiagram, FaEnvelope, FaSignInAlt, FaPlus, FaList, FaBuilding, FaCubes, FaAngleDoubleLeft, FaAngleDoubleRight, FaSignOutAlt } from "react-icons/fa";
+import {
+  FaBars,
+  FaCheck,
+  FaInfoCircle,
+  FaHandHolding,
+  FaProjectDiagram,
+  FaEnvelope,
+  FaSignInAlt,
+  FaPlus,
+  FaList,
+  FaBuilding,
+  FaCubes,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+  FaSignOutAlt,
+  FaWpforms
+} from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
 
@@ -191,19 +207,13 @@ function AppContent() {
                 </MenuItem>
               </SubMenu>
 
-              <SubMenu
-                label="Formularios"
-                icon={<FaBuilding />}
-                defaultOpen={location.pathname.includes('/formularios')}
-              >
-                <MenuItem
+              <MenuItem
+                  icon={<FaWpforms />}
                   component={<Link to="/formularios" onClick={() => handleToggleSidebar(false)} />}
                   active={isActiveRoute('/formularios')}
-                >
-                  <FaPlus size={16} style={{ marginRight: 8 }} />
-                  Formularios
-                </MenuItem>
-              </SubMenu>
+              >
+                Formularios
+              </MenuItem>
             </>
           )}
 

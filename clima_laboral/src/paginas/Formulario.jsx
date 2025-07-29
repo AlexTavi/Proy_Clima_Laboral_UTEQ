@@ -8,10 +8,12 @@ import {
   IconButton,
 } from "@mui/material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import FormatIndentIncreaseIcon from '@mui/icons-material/FormatIndentIncrease';
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import {toast} from "react-hot-toast";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
@@ -73,16 +75,13 @@ const handleAplicar = async (row) => {
   }
 };
 
-
-
-
-
-
 export default function Formulario() {
   const [rows, setRows] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [refresh, setRefresh] = useState(0);
+
 
   useEffect(() => {
     const fetchCuestionarios = async () => {
@@ -112,12 +111,57 @@ export default function Formulario() {
     };
 
     fetchCuestionarios();
-  }, []);
+  }, [refresh]);
+
+  async function handleEliminar(row) {
+    const id = row.id_cuestionario;
+
+    const confirmacion = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: `Vas a eliminar el cuestionario #${id}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      footer: `<div style="margin-top:10px; font-size: 14px;">
+               <FontAwesomeIcon icon="${DeleteIcon}" /> Esta acción no se puede deshacer
+             </div>`
+    });
+
+    if (confirmacion.isConfirmed) {
+      try {
+        const response = await fetch(`${apiUrl}api/forms/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          toast.success(data.message);
+          setRefresh(prev => prev + 1);
+        } else{
+          toast.error(data.message);
+        }
+
+      } catch (error) {
+        console.error("❌ Error al eliminar:", error);
+        Swal.fire('Error', 'No se pudo eliminar el cuestionario.', 'error');
+      }
+    }
+  }
 
   const filteredRows = rows.filter(
     (r) =>
-      r.nom_empresa?.toLowerCase().includes(search.toLowerCase()) ||
-      r.tipo?.toLowerCase().includes(search.toLowerCase())
+      r.nom_empresa?.toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
@@ -155,12 +199,12 @@ export default function Formulario() {
           <Tooltip title="Ver Preguntas">
             <IconButton
               size="small"
-              color="info"
+              color="secondary"
               onClick={() =>
                 navigate(`/formulario/${params.row.id_cuestionario}`)
               }
             >
-              <VisibilityIcon />
+              <EditIcon />
             </IconButton>
           </Tooltip>
 
@@ -168,9 +212,7 @@ export default function Formulario() {
             <IconButton
               size="small"
               color="error"
-              onClick={() =>
-                alert(`Eliminar cuestionario ${params.row.id_cuestionario}`)
-              }
+              onClick={() =>handleEliminar(params.row)}
             >
               <DeleteIcon />
             </IconButton>
@@ -183,7 +225,7 @@ export default function Formulario() {
               color="secondary"
               onClick={() => handleAplicar(params.row)}
             >
-              <PostAddIcon />
+              <FormatIndentIncreaseIcon />
             </IconButton>
           </Tooltip>
         </>
@@ -193,13 +235,6 @@ export default function Formulario() {
 
   return (
     <Box sx={{ height: 600, width: "100%" }}>
-      <TextField
-        variant="outlined"
-        label="Buscar cuestionario"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
-      />
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />

@@ -15,7 +15,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CancelIcon from '@mui/icons-material/Cancel';
 import GlassCard from "../componentes/GlassCard";
+import Swal from 'sweetalert2';
+import {toast} from "react-hot-toast";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
@@ -77,14 +80,14 @@ export default function FormularioDetalle() {
       );
       const data = await res.json();
       if (data.success) {
-        alert("✅ Pregunta actualizada correctamente");
+        toast.success("✅ Pregunta actualizada correctamente");
         setEditando(null);
       } else {
-        alert("❌ Error: " + data.message);
+        toast.error("Error: " + data.message);
       }
     } catch (error) {
       console.error("❌ Error al actualizar:", error);
-      alert("Error al actualizar la pregunta");
+      toast.error("Error al actualizar la pregunta");
     }
   };
 
@@ -97,26 +100,40 @@ export default function FormularioDetalle() {
 
   // ✅ Eliminar pregunta (requiere endpoint real)
   const handleEliminarPregunta = async (index) => {
-    if (!confirm("¿Seguro que deseas eliminar esta pregunta?")) return;
     const p = preguntas[index];
 
-    try {
-      const res = await fetch(
-          apiUrl+`api/delete-reactivos/${p.id_cr}`,
-        {
-          method: "DELETE",
-          headers: {Authorization: `Bearer ${token}`}
-        }
-      );
+    const confirmacion = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: `Eliminarás la pregunta: "${p.pregunta}"`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
 
-      if (res.ok) {
-        alert("✅ Pregunta eliminada");
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      const res = await fetch(apiUrl + `api/delete-reactivos/${p.id_cr}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+
+      if (data.success) {
         setPreguntas((prev) => prev.filter((_, i) => i !== index));
+        await toast.success('La pregunta fue eliminada correctamente.');
       } else {
-        alert("❌ Error al eliminar");
+        await toast.error('No se pudo eliminar la pregunta.');
       }
+
     } catch (error) {
       console.error("❌ Error eliminando pregunta:", error);
+      toast.error('Ocurrió un problema al eliminar.');
     }
   };
 
@@ -228,36 +245,48 @@ export default function FormularioDetalle() {
                 </Box>
               )}
 
-              <Box sx={{ mt: 1 }}>
+              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
                 {editando === index ? (
-                  <Tooltip title="Guardar">
-                    <IconButton
-                      color="success"
-                      onClick={() => handleGuardarPregunta(index)}
-                    >
-                      <SaveIcon />
-                    </IconButton>
-                  </Tooltip>
+                    <>
+                      <Tooltip title="Guardar">
+                        <IconButton
+                            color="success"
+                            onClick={() => handleGuardarPregunta(index)}
+                        >
+                          <SaveIcon />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Cancelar">
+                        <IconButton
+                            color="warning"
+                            onClick={() => setEditando(null)}
+                        >
+                          <CancelIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </>
                 ) : (
-                  <Tooltip title="Editar">
-                    <IconButton
-                      color="primary"
-                      onClick={() => setEditando(index)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
+                    <Tooltip title="Editar">
+                      <IconButton
+                          color="primary"
+                          onClick={() => setEditando(index)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
                 )}
 
                 <Tooltip title="Eliminar">
                   <IconButton
-                    color="error"
-                    onClick={() => handleEliminarPregunta(index)}
+                      color="error"
+                      onClick={() => handleEliminarPregunta(index)}
                   >
                     <DeleteIcon />
                   </IconButton>
                 </Tooltip>
               </Box>
+
             </Box>
           ))
         ) : (
