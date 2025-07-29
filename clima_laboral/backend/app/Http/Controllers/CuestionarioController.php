@@ -107,7 +107,7 @@ class CuestionarioController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => ' Reactivo no encontrado.'
-                ], 404);
+                ], 200);
             }
 
             $reactivo->delete();
@@ -120,7 +120,32 @@ class CuestionarioController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => ' Error al eliminar: ' . $e->getMessage()
-            ], 500);
+            ], 200);
+        }
+    }
+    public function destroyFormulario($id_cuestionario)
+    {
+        try {
+            $formulario = Cuestionario::find($id_cuestionario);
+
+            if (!$formulario) {
+                return response()->json([
+                    'success' => false,
+                    'message' => ' Reactivo no encontrado.'
+                ], 200);
+            }
+
+            $formulario->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Formulario eliminada correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => ' Error al eliminar: ' . $e->getMessage()
+            ], 200);
         }
     }
 

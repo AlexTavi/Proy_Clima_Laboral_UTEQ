@@ -21,4 +21,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/delete-reactivos/{id_cr}', [CuestionarioController::class, 'destroyReactivo']);
     Route::get('/empresa/{id}/edit', [EmpresaController::class, 'edit']);
     Route::put('/empresa/{id}', [EmpresaController::class, 'update']);
+    Route::delete('/forms/{id_cuestionario}', [CuestionarioController::class, 'destroyFormulario']);
 });
