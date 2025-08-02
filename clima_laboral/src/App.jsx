@@ -20,8 +20,8 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
+import Swal from 'sweetalert2';
 
-import Principal from './paginas/principal.jsx';
 import Login from './paginas/Login.jsx';
 import Inicio from './paginas/inicio.jsx';
 import NuevoFormulario from './paginas/new.jsx';
@@ -58,8 +58,21 @@ function AppContent() {
   const isActiveRoute = (path) => location.pathname === path;
 
   const handleLogout = () => {
-    logout();
-    navigate('/', { replace: true });
+    Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: 'Se cerrará tu sesión actual.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+        navigate('/', { replace: true });
+      }
+    });
   };
 
   return (

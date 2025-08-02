@@ -7,30 +7,40 @@ import {
   Tooltip,
   IconButton,
 } from "@mui/material";
-import PostAddIcon from "@mui/icons-material/PostAdd";
+import DownloadIcon from '@mui/icons-material/Download';
 import FormatIndentIncreaseIcon from '@mui/icons-material/FormatIndentIncrease';
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {toast} from "react-hot-toast";
+import {esES} from "@mui/x-data-grid/locales";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
 
 const handleAplicar = async (row) => {
   try {
-    console.log("📌 Datos enviados a handleAplicar:", row);
+    // console.log("📌 Datos enviados a handleAplicar:", row);
 
     if (!row.id_cuestionario || !row.id_empresa) {
-      alert("❌ No se encontró id_cuestionario o id_empresa. Verifica los datos.");
+      toast.error("No se encontró id_cuestionario o id_empresa. Verifica los datos.");
       return;
     }
 
-    const confirmar = confirm(
-      `¿Deseas generar tokens para el cuestionario ${row.id_cuestionario} de la empresa ${row.nom_empresa}?`
-    );
-    if (!confirmar) return;
+    const result = await Swal.fire({
+      title: '¿Generar tokens?',
+      html: `¿Deseas generar tokens para el cuestionario <strong>${row.id_cuestionario}</strong> de la empresa <strong>${row.nom_empresa}</strong>?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, generar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+
+    if (!result.isConfirmed) return;
+
 
     const res = await fetch("https://encuestas.grupocrehce.com/generar-tokens", {
       method: "POST",
@@ -75,6 +85,55 @@ const handleAplicar = async (row) => {
   }
 };
 
+const handleDescargar = async (row) => {
+  try {
+    if (!row.id_cuestionario || !row.id_empresa) {
+      toast.error("No se encontró id_cuestionario o id_empresa. Verifica los datos.");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '¿Descargar reporte?',
+      html: `¿Deseas descargar el reporte del cuestionario <strong>${row.id_cuestionario}</strong> de la empresa <strong>${row.nom_empresa}</strong>?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, descargar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+
+    if (!result.isConfirmed) return;
+
+    const response = await fetch(apiUrl+`api/exportar-frecuencia/${row.id_cuestionario}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Error al obtener el archivo Excel');
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `reporte-cuestionario-${row.id_cuestionario}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    toast.success("✅ Reporte descargado correctamente");
+
+  } catch (e) {
+    console.error(e);
+    toast.error("No se pudo descargar el archivo");
+  }
+};
+
+
 export default function Formulario() {
   const [rows, setRows] = useState([]);
   const [search] = useState("");
@@ -101,6 +160,9 @@ export default function Formulario() {
           nom_empresa: item.nom_empresa,
           tipo: item.tipo,
           created_at: item.created_at || "",
+          status_token: item.status_token || "",
+          tokens: item.tokens || "",
+          tokens_usados: item.tokens_usados || "",
           }))
         );
       } catch (error) {
@@ -169,14 +231,37 @@ export default function Formulario() {
     { field: "nom_empresa", headerName: "Empresa", width: 180 },
     { field: "tipo", headerName: "Tipo", width: 120 },
     {
+      field: "status_token",
+      headerName: "Estatus",
+      width: 120,
+      renderCell: (params) => {
+        console.log(params.row)
+        const status = params.row.status_token;
+        const color = status.toLowerCase() === "activo" ? "green" : "red";
+        return (
+            <span style={{ color, fontWeight: "bold" }}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+        );
+      },
+    },
+    {
+      field: "tokens_usados",
+      headerName: "Tokens usados",
+      width: 140,
+      renderCell: (params) => {
+        const usados = params.row.tokens_usados ?? 0;
+        const total = params.row.tokens ?? 0;
+        return `${usados} de ${total}`;
+      },
+    },
+    {
       field: "created_at",
       headerName: "Creado el",
       width: 140,
       renderCell: (params) => {
         const fecha = params.row.created_at;
         if (!fecha) return "Sin fecha";
-
-        // ✅ Lo formateamos a dd/mm/yyyy
         const fechaValida = fecha.includes("T") ? fecha : `${fecha}T00:00:00`;
         return new Date(fechaValida).toLocaleDateString("es-MX", {
           day: "2-digit",
@@ -185,7 +270,6 @@ export default function Formulario() {
         });
       },
     },
-
     {
       field: "acciones",
       headerName: "Acciones",
@@ -195,43 +279,58 @@ export default function Formulario() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <>
-          <Tooltip title="Ver Preguntas">
-            <IconButton
-              size="small"
-              color="secondary"
-              onClick={() =>
-                navigate(`/formulario/${params.row.id_cuestionario}`)
-              }
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
+          <>
+            {params.row.status_token !== 'activo' && (
+              <Tooltip title="Editar">
+                <IconButton
+                    size="small"
+                    color="secondary"
+                    onClick={() =>
+                        navigate(`/formulario/${params.row.id_cuestionario}`)
+                    }
+                >
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+            )}
 
-          <Tooltip title="Eliminar">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() =>handleEliminar(params.row)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
+            <Tooltip title="Eliminar">
+              <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleEliminar(params.row)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
 
-
-          <Tooltip title="Aplicar">
-            <IconButton
-              size="small"
-              color="secondary"
-              onClick={() => handleAplicar(params.row)}
-            >
-              <FormatIndentIncreaseIcon />
-            </IconButton>
-          </Tooltip>
-        </>
+            {params.row.status_token !== 'activo' && (
+                <Tooltip title="Aplicar">
+                  <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={() => handleAplicar(params.row)}
+                  >
+                    <FormatIndentIncreaseIcon />
+                  </IconButton>
+                </Tooltip>
+            )}
+            {params.row.status_token !== 'inactivo' && (
+                <Tooltip title="Aplicar">
+                  <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={() => handleDescargar(params.row)}
+                  >
+                    <DownloadIcon />
+                  </IconButton>
+                </Tooltip>
+            )}
+          </>
       ),
     },
   ];
+
 
   return (
     <Box sx={{ height: 600, width: "100%" }}>
@@ -247,6 +346,12 @@ export default function Formulario() {
           rowsPerPageOptions={[5, 10, 20]}
           disableSelectionOnClick
           autoHeight
+          localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 25, page: 0 },
+            },
+          }}
         />
       )}
     </Box>
