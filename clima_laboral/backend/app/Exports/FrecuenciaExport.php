@@ -16,7 +16,7 @@ class FrecuenciaExport implements FromArray
 
     public function array(): array
     {
-        $data = DB::table('respuestas as val')
+        $rawData = DB::table('respuestas as val')
             ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
             ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
             ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
@@ -24,7 +24,7 @@ class FrecuenciaExport implements FromArray
                 'd.nombre as dimension',
                 'r.pregunta',
                 'val.respuesta',
-                DB::raw('COUNT(*) as repeticiones')
+                DB::raw('COUNT(*) as total')
             )
             ->where('p.id_cuestionario', $this->id_cuestionario)
             ->groupBy('d.nombre', 'r.pregunta', 'val.respuesta')
@@ -33,18 +33,44 @@ class FrecuenciaExport implements FromArray
             ->orderBy('val.respuesta')
             ->get();
 
-        $estructura = [];
-        $estructura[] = ['Dimensión', 'Pregunta', 'Respuesta', 'Repeticiones'];
+        // Reestructurar los datos en formato pivote
+        $pivot = [];
 
-        foreach ($data as $row) {
+        foreach ($rawData as $row) {
+            $key = $row->dimension . '|' . $row->pregunta;
+
+            if (!isset($pivot[$key])) {
+                $pivot[$key] = [
+                    'dimension' => $row->dimension,
+                    'pregunta' => $row->pregunta,
+                    1 => 0,
+                    2 => 0,
+                    3 => 0,
+                    4 => 0,
+                    5 => 0,
+                ];
+            }
+
+            $pivot[$key][$row->respuesta] = $row->total;
+        }
+
+        // Construir la estructura final para exportar
+        $estructura = [];
+        $estructura[] = ['Dimensión', 'Pregunta', '1', '2', '3', '4', '5'];
+
+        foreach ($pivot as $item) {
             $estructura[] = [
-                $row->dimension,
-                $row->pregunta,
-                $row->respuesta,
-                $row->repeticiones,
+                $item['dimension'],
+                $item['pregunta'],
+                $item[1] ?? 0,
+                $item[2] ?? 0,
+                $item[3] ?? 0,
+                $item[4] ?? 0,
+                $item[5] ?? 0,
             ];
         }
 
         return $estructura;
     }
+
 }
