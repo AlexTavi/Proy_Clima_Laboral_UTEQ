@@ -14,16 +14,23 @@ class CuestionarioController extends Controller
 {
     public function index()
     {
-        $cuestionarios = Cuestionario::with('cuestionario_empresa')
+        $cuestionarios = Cuestionario::with('cuestionario_empresa', 'cuestionario_token')
             ->get()
             ->map(function($c) {
+                $totalTokens = $c->cuestionario_token->count();
+                $tokensUsados = $c->cuestionario_token->where('usado', true)->count();
+                $statusToken = $totalTokens > 0 ? 'activo' : 'inactivo';
+
                 return [
                     'id_cuestionario' => $c->id_cuestionario,
 		            'id_empresa' => $c->id_empresa,
                     'nom_empresa' => $c->cuestionario_empresa ? $c->cuestionario_empresa->nom_empresa : null,
                     'tipo' => $c->tipo,
                     'created_at' => $c->fecha_creacion,
-                    'updated_at' => $c->updated_at
+                    'updated_at' => $c->updated_at,
+                    'tokens' => $totalTokens,
+                    'tokens_usados' => $tokensUsados,
+                    'status_token' => $statusToken,
                 ];
             });
 
