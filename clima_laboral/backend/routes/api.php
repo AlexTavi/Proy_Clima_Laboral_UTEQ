@@ -4,6 +4,7 @@ use App\Http\Controllers\EmpresaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuestionarioController;
+use App\Http\Controllers\FrecuenciaExportController;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -22,4 +23,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/empresa/{id}/edit', [EmpresaController::class, 'edit']);
     Route::put('/empresa/{id}', [EmpresaController::class, 'update']);
     Route::delete('/forms/{id_cuestionario}', [CuestionarioController::class, 'destroyFormulario']);
+    Route::get('/exportar-frecuencia/{id_cuestionario}', [FrecuenciaExportController::class, 'exportar']);
 });
