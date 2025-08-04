@@ -54,7 +54,7 @@ export default function FormularioDetalle() {
         });
         const data = await res.json();
         setPreguntas(data.cuestionario?.preguntas || []);
-        setDimensiones(data.dimensiones || []);
+        setDimensiones(data.dimensions || []);
         setEscalas(data.escalas || []);
       } catch (error) {
         console.error("❌ Error al cargar datos:", error);
