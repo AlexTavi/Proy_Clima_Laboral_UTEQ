@@ -19,6 +19,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import GlassCard from "../componentes/GlassCard";
 import Swal from 'sweetalert2';
 import {toast} from "react-hot-toast";
+import PreguntaForm from "../componentes/PreguntaForm";
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
@@ -31,7 +32,13 @@ export default function FormularioDetalle() {
   const [dimensiones, setDimensiones] = useState([]);
   const [escalas, setEscalas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editando, setEditando] = useState(null);
+  const [editandoIndex, setEditandoIndex] = useState(null);
+  const [agregando, setAgregando] = useState(false);
+  const [nuevaPregunta, setNuevaPregunta] = useState({
+    pregunta: "",
+    id_dimension: "",
+    id_escala: "",
+  });
 
   // ✅ Cargar datos del backend
   useEffect(() => {
@@ -59,29 +66,26 @@ export default function FormularioDetalle() {
     fetchDatos();
   }, [id]);
 
-  // ✅ Guardar pregunta editada
+  // Guardar pregunta editada
   const handleGuardarPregunta = async (index) => {
     const p = preguntas[index];
     try {
-      const res = await fetch(
-          apiUrl+`api/update-reactivos/${p.id_cr}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            pregunta: p.pregunta,
-            id_dimension: p.id_dimension,
-            id_escala: p.id_escala,
-          }),
-        }
-      );
+      const res = await fetch(apiUrl + `api/update-reactivos/${p.id_cr}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pregunta: p.pregunta,
+          id_dimension: p.id_dimension,
+          id_escala: p.id_escala,
+        }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success("✅ Pregunta actualizada correctamente");
-        setEditando(null);
+        setEditandoIndex(null);
       } else {
         toast.error("Error: " + data.message);
       }
@@ -91,14 +95,58 @@ export default function FormularioDetalle() {
     }
   };
 
-  // ✅ Cambiar texto, dimensión o escala en tiempo real
+  // Cambiar texto, dimensión o escala en tiempo real para edición
   const handleCambio = (index, campo, valor) => {
     const actualizadas = [...preguntas];
     actualizadas[index][campo] = valor;
     setPreguntas(actualizadas);
   };
 
-  // ✅ Eliminar pregunta (requiere endpoint real)
+  // Cambiar texto, dimensión o escala en tiempo real para nueva pregunta
+  const handleCambioNueva = (campo, valor) => {
+    setNuevaPregunta((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  // Guardar nueva pregunta
+  const handleGuardarNuevaPregunta = async () => {
+    if (
+      !nuevaPregunta.pregunta.trim() ||
+      !nuevaPregunta.id_dimension ||
+      !nuevaPregunta.id_escala
+    ) {
+      alert("Por favor completa todos los campos para la nueva pregunta.");
+      return;
+    }
+    try {
+      const res = await fetch(apiUrl + `api/create-reactivo`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id_cuestionario: parseInt(id),
+          pregunta: nuevaPregunta.pregunta,
+          id_dimension: nuevaPregunta.id_dimension,
+          id_escala: nuevaPregunta.id_escala,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Pregunta creada correctamente");
+        setPreguntas((prev) => [...prev, data.pregunta]); // Asumiendo backend devuelve la pregunta creada
+        setAgregando(false);
+        setNuevaPregunta({ pregunta: "", id_dimension: "", id_escala: "" });
+      } else {
+        alert("❌ Error: " + data.message);
+      }
+    } catch (error) {
+      console.error("❌ Error al crear pregunta:", error);
+      alert("Error al crear la pregunta");
+    }
+  };
+
+  // Eliminar pregunta
   const handleEliminarPregunta = async (index) => {
     const p = preguntas[index];
 
@@ -130,7 +178,6 @@ export default function FormularioDetalle() {
       } else {
         await toast.error('No se pudo eliminar la pregunta.');
       }
-
     } catch (error) {
       console.error("❌ Error eliminando pregunta:", error);
       toast.error('Ocurrió un problema al eliminar.');
@@ -147,28 +194,66 @@ export default function FormularioDetalle() {
 
   return (
     <Box sx={{ padding: 4 }}>
-      {/* ✅ Título y botón volver */}
+      {/* Título y botón volver */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
         <Tooltip title="Volver">
           <IconButton color="primary" onClick={() => navigate(-1)}>
             <ArrowBackIcon />
           </IconButton>
         </Tooltip>
-        <Typography
-          variant="h5"
-          sx={{ fontWeight: "bold", ml: 1, color: "#4946a9" }}
-        >
+        <Typography variant="h5" sx={{ fontWeight: "bold", ml: 1, color: "#4946a9" }}>
           Cuestionario #{id}
         </Typography>
       </Box>
 
       <GlassCard>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}
-        >
+        <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
           Preguntas del cuestionario
         </Typography>
+
+        {/* Botón para agregar nueva pregunta */}
+        {!agregando && (
+          <Box sx={{ mb: 2 }}>
+            <Button variant="contained" onClick={() => setAgregando(true)}>
+              Agregar pregunta
+            </Button>
+          </Box>
+        )}
+
+        {/* Formulario para nueva pregunta */}
+        {agregando && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              border: "1px solid #ccc",
+              borderRadius: 2,
+            }}
+          >
+            <PreguntaForm
+              preguntaData={nuevaPregunta}
+              dimensiones={dimensiones}
+              escalas={escalas}
+              onChange={handleCambioNueva}
+            />
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button variant="contained" color="success" onClick={handleGuardarNuevaPregunta} startIcon={<SaveIcon />}>
+                Guardar
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => {
+                  setAgregando(false);
+                  setNuevaPregunta({ pregunta: "", id_dimension: "", id_escala: "" });
+                }}
+                startIcon={<CancelIcon />}
+              >
+                Cancelar
+              </Button>
+            </Box>
+          </Box>
+        )}
 
         {preguntas.length > 0 ? (
           preguntas.map((p, index) => (
@@ -182,111 +267,69 @@ export default function FormularioDetalle() {
                 pb: 1,
               }}
             >
-              {editando === index ? (
+              {editandoIndex === index ? (
                 <>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Pregunta"
-                    value={p.pregunta}
-                    onChange={(e) =>
-                      handleCambio(index, "pregunta", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
+                  <PreguntaForm
+                    preguntaData={p}
+                    dimensiones={dimensiones}
+                    escalas={escalas}
+                    onChange={(campo, valor) => handleCambio(index, campo, valor)}
                   />
 
-                  <Select
-                    size="small"
-                    value={p.id_dimension}
-                    onChange={(e) =>
-                      handleCambio(index, "id_dimension", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  >
-                    {dimensiones.map((d) => (
-                      <MenuItem key={d.id_dimension} value={d.id_dimension}>
-                        {d.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-
-                  <Select
-                    size="small"
-                    value={p.id_escala}
-                    onChange={(e) =>
-                      handleCambio(index, "id_escala", e.target.value)
-                    }
-                    sx={{ mb: 1 }}
-                  >
-                    {escalas.map((e) => (
-                      <MenuItem key={e.id_escala} value={e.id_escala}>
-                        {e.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleGuardarPregunta(index)}
+                      startIcon={<SaveIcon />}
+                    >
+                      Guardar
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => setEditandoIndex(null)}
+                      startIcon={<CancelIcon />}
+                    >
+                      Cancelar
+                    </Button>
+                  </Box>
                 </>
               ) : (
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontWeight: "bold" }}>
-                    {index + 1}. {p.pregunta}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Dimensión:{" "}
-                    <strong>
-                      {dimensiones.find((d) => d.id_dimension === p.id_dimension)
-                        ?.nombre || p.nom_dimension}
-                    </strong>{" "}
-                    | Escala:{" "}
-                    <strong>
-                      {escalas.find((e) => e.id_escala === p.id_escala)?.nombre ||
-                        p.nom_escala}
-                    </strong>
-                  </Typography>
-                </Box>
-              )}
+                <>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ fontWeight: "bold" }}>
+                      {index + 1}. {p.pregunta}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Dimensión:{" "}
+                      <strong>
+                        {dimensiones.find((d) => d.id_dimension === p.id_dimension)
+                          ?.nombre || p.nom_dimension}
+                      </strong>{" "}
+                      | Escala:{" "}
+                      <strong>
+                        {escalas.find((e) => e.id_escala === p.id_escala)?.nombre ||
+                          p.nom_escala}
+                      </strong>
+                    </Typography>
+                  </Box>
 
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                {editando === index ? (
-                    <>
-                      <Tooltip title="Guardar">
-                        <IconButton
-                            color="success"
-                            onClick={() => handleGuardarPregunta(index)}
-                        >
-                          <SaveIcon />
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title="Cancelar">
-                        <IconButton
-                            color="warning"
-                            onClick={() => setEditando(null)}
-                        >
-                          <CancelIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </>
-                ) : (
+                  <Box sx={{ mt: 1 }}>
                     <Tooltip title="Editar">
-                      <IconButton
-                          color="primary"
-                          onClick={() => setEditando(index)}
-                      >
+                      <IconButton color="primary" onClick={() => setEditandoIndex(index)}>
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
-                )}
 
-                <Tooltip title="Eliminar">
-                  <IconButton
-                      color="error"
-                      onClick={() => handleEliminarPregunta(index)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-
+                    <Tooltip title="Eliminar">
+                      <IconButton color="error" onClick={() => handleEliminarPregunta(index)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </>
+              )}
             </Box>
           ))
         ) : (
