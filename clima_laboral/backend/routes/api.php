@@ -24,4 +24,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/empresa/{id}', [EmpresaController::class, 'update']);
     Route::delete('/forms/{id_cuestionario}', [CuestionarioController::class, 'destroyFormulario']);
     Route::get('/exportar-frecuencia/{id_cuestionario}', [FrecuenciaExportController::class, 'exportar']);
+    Route::post('/create-reactivo', [CuestionarioController::class, 'store']);
 });

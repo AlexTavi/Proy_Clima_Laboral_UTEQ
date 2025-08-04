@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Reactivo;
 use Illuminate\Http\Request;
 use App\Models\Cuestionario;
 use App\Models\Dimension;
@@ -47,7 +48,7 @@ class CuestionarioController extends Controller
         ])->findOrFail($id_cuestionario);
 
         // Catálogo de dimensiones
-        $dimensiones = Dimension::all(['id_dimension', 'nombre']);
+        $dimensions = Dimension::all(['id_dimension', 'nombre']);
         // Catálogo de escalas
         $escalas = Escala::all(['id_escala', 'nombre']);
         //dd($cuestionario->cuestionario_cr);
@@ -72,14 +73,13 @@ class CuestionarioController extends Controller
                 'id_cuestionario' => $cuestionario->id_cuestionario,
                 'preguntas' => $preguntas
             ],
-            'dimensiones' => $dimensiones,
+            'dimensions' => $dimensions,
             'escalas' => $escalas
         ]);
     }
 
     public function update(Request $request, $id_cr)
     {
-        // Buscar el registro pivote
         $cuestionarioReactivo = Cuestionario_reactivo::findOrFail($id_cr);
 
         // Actualizar escala si viene en la petición
@@ -156,5 +156,40 @@ class CuestionarioController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        // Validar los datos que vienen en el body del JSON
+        $validated = $request->validate([
+            'id_cuestionario' => 'required|integer|exists:cuestionarios,id_cuestionario',
+            'pregunta' => 'required|string',
+            'id_dimension' => 'required|integer|exists:dimensions,id_dimension',
+            'id_escala' => 'nullable|integer|exists:escalas,id_escala',
+        ]);
+//        dd($request->all());
 
+        // Crear el nuevo reactivo
+        $reactivo = new Reactivo();
+        $reactivo->pregunta = $validated['pregunta'];
+        $reactivo->id_dimension = $validated['id_dimension'];
+        $reactivo->save();
+
+        // Crear el registro en la tabla pivote
+        $cuestionarioReactivo = new Cuestionario_reactivo();
+        $cuestionarioReactivo->id_cuestionario = $validated['id_cuestionario'];
+        $cuestionarioReactivo->id_reactivo = $reactivo->id_reactivo; // clave primaria del reactivo
+        $cuestionarioReactivo->id_escala = $validated['id_escala'] ?? null;
+        $cuestionarioReactivo->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pregunta insertada correctamente',
+            'data' => [
+                'id_cr' => $cuestionarioReactivo->id_cr,
+                'id_reactivo' => $reactivo->id_reactivo,
+                'pregunta' => $reactivo->pregunta,
+                'id_dimension' => $reactivo->id_dimension,
+                'id_escala' => $cuestionarioReactivo->id_escala,
+            ]
+        ]);
+    }
 }
