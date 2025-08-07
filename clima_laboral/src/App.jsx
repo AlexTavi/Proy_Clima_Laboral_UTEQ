@@ -1,22 +1,17 @@
-import {BrowserRouter as Router, Routes, Route, useNavigate} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
 import { useState } from "react";
 import {
   FaBars,
-  FaCheck,
-  FaInfoCircle,
-  FaHandHolding,
-  FaProjectDiagram,
-  FaEnvelope,
-  FaSignInAlt,
+  FaCubes,
+  FaBuilding,
   FaPlus,
   FaList,
-  FaBuilding,
-  FaCubes,
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
+  FaSignInAlt,
   FaSignOutAlt,
-  FaWpforms
+  FaWpforms,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight
 } from "react-icons/fa";
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './auth-context';
@@ -25,20 +20,13 @@ import Swal from 'sweetalert2';
 import Login from './paginas/Login.jsx';
 import Inicio from './paginas/inicio.jsx';
 import NuevoFormulario from './paginas/new.jsx';
-import Footer from "./componentes/Footer.jsx";
-import Info from "./paginas/Info.jsx";
-import Servicios from "./paginas/Servicios.jsx";
-import Proyectos from "./paginas/Proyectos.jsx";
-import Contacto from "./paginas/Contacto.jsx";
-import Empresas from "./paginas/Empresas.jsx";
-import Formulario from "./paginas/Formulario.jsx"; // ✅ Importación correcta
+import Empresas from './paginas/Empresas.jsx';
+import Formulario from './paginas/Formulario.jsx';
+import FormularioDetalle from "./paginas/FormularioDetalle.jsx";
+import { Toaster } from "react-hot-toast";
 import './App.scss';
 import logo from '../imagen.jpg';
-import Beneficios from "./paginas/Beneficios.jsx";
-import {Toaster} from "react-hot-toast";
-import FormularioDetalle from "./paginas/FormularioDetalle.jsx";
 
-// ✅ Componente interno para manejar Sidebar + Rutas
 function AppContent() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -47,14 +35,8 @@ function AppContent() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleCollapsedChange = () => {
-    setCollapsed(!collapsed);
-  };
-
-  const handleToggleSidebar = (value) => {
-    setToggled(value);
-  };
-
+  const handleCollapsedChange = () => setCollapsed(!collapsed);
+  const handleToggleSidebar = (value) => setToggled(value);
   const isActiveRoute = (path) => location.pathname === path;
 
   const handleLogout = () => {
@@ -86,23 +68,19 @@ function AppContent() {
         breakPoint="md"
         transitionDuration={300}
         onBackdropClick={() => handleToggleSidebar(false)}
-        onBreakPoint={(broken) => {
-          if (broken) setCollapsed(false);
-        }}
+        onBreakPoint={(broken) => { if (broken) setCollapsed(false); }}
         rootStyles={{
           color: '#000',
           fontSize: '14px',
           fontFamily: 'Poppins, sans-serif',
         }}
       >
-        {/* Header del sidebar */}
         <div className="sidebar-header">
           <div className="sidebar-logo-collapsed">
             <img src={logo} alt="Logo" className="sidebar-logo-collapsed" />
           </div>
         </div>
 
-        {/* Botón de colapso */}
         <div className="sidebar-btn-wrapper">
           <button
             className="sidebar-btn"
@@ -113,7 +91,6 @@ function AppContent() {
           </button>
         </div>
 
-        {/* Menu principal */}
         <Menu
           closeOnClick={true}
           transitionDuration={300}
@@ -142,53 +119,15 @@ function AppContent() {
             subMenuContent: { backgroundColor: '#fff' },
           }}
         >
-          {/* Información pública */}
-          {!user && (
-            <>
-              <MenuItem
-                icon={<FaInfoCircle />}
-                component={<Link to="/" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/')}
-              >
-                Información
-              </MenuItem>
-
-              <MenuItem
-                icon={<FaCheck />}
-                component={<Link to="/beneficios" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/beneficios')}
-              >
-                Beneficios
-              </MenuItem>
-
-              <MenuItem
-                icon={<FaHandHolding />}
-                component={<Link to="/servicios" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/servicios')}
-              >
-                Servicios
-              </MenuItem>
-
-              <MenuItem
-                icon={<FaProjectDiagram />}
-                component={<Link to="/proyectos" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/proyectos')}
-              >
-                Proyectos
-              </MenuItem>
-
-              <MenuItem
-                icon={<FaEnvelope />}
-                component={<Link to="/contacto" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/contacto')}
-              >
-                Contacto
-              </MenuItem>
-            </>
-          )}
-
-          {/* Menú para usuarios logueados */}
-          {user && (
+          {!user ? (
+            <MenuItem
+              icon={<FaSignInAlt />}
+              component={<Link to="/login" onClick={() => handleToggleSidebar(false)} />}
+              active={isActiveRoute('/login')}
+            >
+              Iniciar Sesión
+            </MenuItem>
+          ) : (
             <>
               <MenuItem
                 icon={<FaCubes />}
@@ -221,38 +160,20 @@ function AppContent() {
               </SubMenu>
 
               <MenuItem
-                  icon={<FaWpforms />}
-                  component={<Link to="/formularios" onClick={() => handleToggleSidebar(false)} />}
-                  active={isActiveRoute('/formularios')}
+                icon={<FaWpforms />}
+                component={<Link to="/formularios" onClick={() => handleToggleSidebar(false)} />}
+                active={isActiveRoute('/formularios')}
               >
                 Formularios
               </MenuItem>
+
+              <div className="sidebar-btn-wrapper">
+                <button className="sidebar-btn" onClick={handleLogout} title="Cerrar sesión">
+                  <FaSignOutAlt />
+                  {!collapsed && <span>Cerrar sesión</span>}
+                </button>
+              </div>
             </>
-          )}
-
-          {/* Separador */}
-          <div className="sidebar-separator" />
-
-          {/* Login / Logout */}
-          {!user ? (
-            <MenuItem
-              icon={<FaSignInAlt />}
-              component={<Link to="/login" onClick={() => handleToggleSidebar(false)} />}
-              active={isActiveRoute('/login')}
-            >
-              Iniciar Sesión
-            </MenuItem>
-          ) : (
-            <div className="sidebar-btn-wrapper">
-              <button
-                className="sidebar-btn"
-                onClick={handleLogout}
-                title={'Cerrar sesión'}
-              >
-                <FaSignOutAlt />
-                {!collapsed && <span>Cerrar sesión</span>}
-              </button>
-            </div>
           )}
         </Menu>
       </Sidebar>
@@ -268,11 +189,7 @@ function AppContent() {
         <div className="app-container">
           <div className="scrollable-content">
             <Routes>
-              <Route path="/" element={<Info />} />
-              <Route path="/beneficios" element={<Beneficios />} />
-              <Route path="/servicios" element={<Servicios />} />
-              <Route path="/proyectos" element={<Proyectos />} />
-              <Route path="/contacto" element={<Contacto />} />
+              <Route path="/" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/inicio" element={<Inicio />} />
               <Route path="/forms/new" element={<NuevoFormulario />} />
@@ -283,15 +200,12 @@ function AppContent() {
             </Routes>
           </div>
         </div>
-
-            {!user && (<Footer />)}
-        </main>
-          <Toaster position="bottom-right" />
-      </div>
+        <Toaster position="bottom-right" />
+      </main>
+    </div>
   );
 }
 
-// ✅ Componente principal con Router
 function App() {
   return (
     <Router>
