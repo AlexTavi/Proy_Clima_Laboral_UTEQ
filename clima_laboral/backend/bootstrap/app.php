@@ -23,5 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (Symfony\Component\Routing\Exception\RouteNotFoundException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Unauthenticated.',
+                    'error' => 'Token inválido o expirado'
+                ], 401);
+            }
+        });
     })->create();
