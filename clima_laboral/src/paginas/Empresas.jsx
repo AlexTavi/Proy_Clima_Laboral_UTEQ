@@ -20,11 +20,9 @@ function resumenEstructura(estructura) {
         .map(([key, val]) => `${val} ${key}`)
         .join(', ');
 }
-// ✅ Mandar datos a Rasa con manejo de errores y respuesta real
 
 async function handleNuevoFormulario(empresa) {
     try {
-        // ✅ 1. Validar datos de empresa
         if (!empresa || !empresa.id_empresa) {
             console.error("❌ No se enviaron datos válidos de la empresa:", empresa);
             Swal.fire({
@@ -36,33 +34,97 @@ async function handleNuevoFormulario(empresa) {
             return;
         }
 
-        // ✅ 2. Elegir tipo de cuestionario (interfaz más bonita)
-        const { value: tipoConfirmado } = await Swal.fire({
-            title: "Elige el tipo de cuestionario",
-            text: "¿Quieres generar un cuestionario NOM‑035 o uno General?",
+        // ✅ 1. Mostrar opciones de tipo de cuestionario
+        const { value: tipoSeleccionado } = await Swal.fire({
+            title: "Selecciona el tipo de cuestionario",
+            text: "¿Qué tipo de cuestionario deseas generar?",
             icon: "question",
             showCancelButton: true,
+            showDenyButton: true,
             confirmButtonText: "✅ NOM‑035",
-            cancelButtonText: "📋 General",
+            denyButtonText: "📋 General",
+            cancelButtonText: "🎯 Elegir Dimensiones",
             reverseButtons: true
         });
 
-        const tipo = tipoConfirmado ? "nom035" : "general";
+        let tipo = null;
+        let dimensionesSeleccionadas = [];
 
-        // ✅ 3. Definir mensaje según tipo
-        const mensajeIA = tipo === "nom035" 
+        // ✅ NOM‑035
+        if (tipoSeleccionado === true) {
+            tipo = "nom035";
+
+        // ✅ General
+        } else if (tipoSeleccionado === false) {
+            tipo = "general";
+
+        // ✅ Elegir dimensiones personalizadas
+        } else {
+            const dimensiones = [
+                "compromiso",
+                "relaciones_laborales",
+                "condiciones_trabajo",
+                "reconocimiento",
+                "desarrollo",
+                "comunicacion",
+                "organizacion_trabajo",
+                "retribucion",
+                "cambio",
+                "confianza",
+                "cultura_innovacion",
+                "motivacion",
+                "seguridad"
+            ];
+
+            const checkboxesHTML = dimensiones.map(dim => `
+                <label style="display:block;text-align:left">
+                    <input type="checkbox" value="${dim}" class="dimension-checkbox" />
+                    ${dim.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </label>
+            `).join('');
+
+            const { value: confirmed } = await Swal.fire({
+                title: 'Selecciona las dimensiones',
+                html: `<form id="dimensiones-form">${checkboxesHTML}</form>`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: '✅ Confirmar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const checkboxes = document.querySelectorAll('.dimension-checkbox');
+                    const seleccionadas = Array.from(checkboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    if (seleccionadas.length === 0) {
+                        Swal.showValidationMessage('Debes seleccionar al menos una dimensión');
+                    }
+                    return seleccionadas;
+                }
+            });
+
+            if (!confirmed) return;
+
+            tipo = "personalizado";
+            dimensionesSeleccionadas = confirmed;
+        }
+
+        const mensajeIA = tipo === "nom035"
             ? "Nuevo formulario NOM035"
-            : "Nuevo formulario de empresa";
+            : tipo === "general"
+            ? "Nuevo formulario de empresa"
+            : `Nuevo formulario con dimensiones: ${dimensionesSeleccionadas.join(", ")}`;
 
         const payload = {
             sender: `usuario_${empresa.id_empresa}`,
             message: mensajeIA,
-            metadata: { empresa }
+            metadata: {
+                empresa,
+                ...(tipo === "personalizado" ? { dimensiones: dimensionesSeleccionadas } : {})
+            }
         };
 
         console.log("🚀 Enviando datos a Rasa:", JSON.stringify(payload, null, 2));
 
-        // ✅ 4. Mostrar un loader mientras se procesa
         Swal.fire({
             title: "⏳ Generando cuestionario...",
             text: "Por favor espera mientras procesamos la solicitud.",
@@ -72,7 +134,6 @@ async function handleNuevoFormulario(empresa) {
             }
         });
 
-        // ✅ 5. Enviar datos a Rasa
         const response = await fetch("https://rasa.grupocrehce.com/webhooks/rest/webhook", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -86,7 +147,6 @@ async function handleNuevoFormulario(empresa) {
         const data = await response.json();
         console.log("✅ Respuesta de Rasa:", data);
 
-        // ✅ 6. Construir respuesta para mostrar al usuario
         const respuestaIA = data.map(msg => msg.text).filter(Boolean).join("\n");
 
         Swal.fire({
@@ -106,6 +166,7 @@ async function handleNuevoFormulario(empresa) {
         });
     }
 }
+
 
 export default function Empresas() {
     const [rows, setRows] = useState([]);
