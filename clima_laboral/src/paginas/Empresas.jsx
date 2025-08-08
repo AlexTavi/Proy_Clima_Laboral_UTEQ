@@ -178,7 +178,11 @@ export default function Empresas() {
     // Fetch datos del backend
     useEffect(() => {
         fetch(apiUrl+'api/forms', {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                Accept: "application/json"
+            },
         })
             .then(res => res.json())
             .then(data => {
@@ -227,7 +231,8 @@ export default function Empresas() {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    Accept: "application/json"
                 },
                 body: JSON.stringify({
                     id_empresa: id_empresa

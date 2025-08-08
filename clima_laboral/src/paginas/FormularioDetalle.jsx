@@ -48,7 +48,8 @@ export default function FormularioDetalle() {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Accept: "application/json"
           },
           body: JSON.stringify({ id_cuestionario: parseInt(id) }),
         });
@@ -75,6 +76,7 @@ export default function FormularioDetalle() {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Accept: "application/json"
         },
         body: JSON.stringify({
           pregunta: p.pregunta,
@@ -123,6 +125,7 @@ export default function FormularioDetalle() {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Accept: "application/json"
         },
         body: JSON.stringify({
           id_cuestionario: parseInt(id),
@@ -167,8 +170,10 @@ export default function FormularioDetalle() {
       const res = await fetch(apiUrl + `api/delete-reactivos/${p.id_cr}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
       });
       const data = await res.json();
 

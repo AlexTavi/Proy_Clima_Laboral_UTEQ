@@ -29,7 +29,11 @@ const ListadoFormularios = () => {
       if (!token) return navigate('/login');
       try {
         const res = await fetch(apiUrl+'api/me', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
         });
         if (!res.ok) throw new Error('Token inválido');
         const data = await res.json();
@@ -47,7 +51,11 @@ const ListadoFormularios = () => {
     try {
       await fetch(apiUrl+'api/logout', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
       });
     } finally {
       localStorage.removeItem('token');
@@ -80,8 +88,10 @@ const ListadoFormularios = () => {
         const token = localStorage.getItem('token');
         const response = await fetch(apiUrl+'api/forms', {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
         });
         
         if (!response.ok) {

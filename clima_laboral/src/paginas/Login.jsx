@@ -22,6 +22,7 @@ export default function Login() {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        Accept: "application/json"
       },
     })
       .then((res) => {
@@ -67,6 +68,7 @@ export default function Login() {
         headers: {
           Authorization: `Bearer ${data.token}`,
           "Content-Type": "application/json",
+          Accept: "application/json"
         },
       });
 

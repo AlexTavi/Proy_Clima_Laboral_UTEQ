@@ -144,7 +144,11 @@ const NuevoFormulario = () => {
       if (!token) return navigate('/login');
       try {
         const res = await fetch(apiUrl + 'api/me', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
         });
         if (!res.ok) throw new Error('Token inválido');
       } catch {
@@ -158,7 +162,11 @@ const NuevoFormulario = () => {
     const fetchEmpresa = async () => {
       try {
         const res = await fetch(apiUrl + `api/empresa/${id_empresa}/edit`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
         });
         const data = await res.json();
         if (data.success) {
@@ -317,8 +325,9 @@ const NuevoFormulario = () => {
       const res = await fetch(url, {
         method: metodo,
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Accept: "application/json"
         },
         body: JSON.stringify(payload)
       });

@@ -108,8 +108,10 @@ const handleDescargar = async (row) => {
     const response = await fetch(apiUrl+`api/exportar-frecuencia/${row.id_cuestionario}`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
     });
 
     if (!response.ok) throw new Error('Error al obtener el archivo Excel');
@@ -146,7 +148,12 @@ export default function Formulario() {
     const fetchCuestionarios = async () => {
       try {
         const res = await fetch(apiUrl+"api/cuestionarios", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+
         });
         const data = await res.json();
         console.log("🔍 Datos crudos del backend:", data); // 👈 Agregado
@@ -198,8 +205,9 @@ export default function Formulario() {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
         });
 
         if (!response.ok) {
