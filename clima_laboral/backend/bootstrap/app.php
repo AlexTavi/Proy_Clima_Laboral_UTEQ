@@ -12,9 +12,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias([
-            'api.auth' => \App\Http\Middleware\ApiAuth::class,
-        ]);
+        // Configurar qué hacer cuando un usuario no está autenticado
+        $middleware->redirectGuestsTo(function ($request) {
+            // Para APIs, no redirigir - esto evita el error "Route [login] not defined"
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return null;
+            }
+
+            // Para web, solo redirigir si existe la ruta login
+            try {
+                return route('login');
+            } catch (\Exception $e) {
+                return null;
+            }
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
