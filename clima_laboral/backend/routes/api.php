@@ -10,7 +10,7 @@ use App\Http\Controllers\FrecuenciaExportController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 // Rutas protegidas con Sanctum (requieren token)
-Route::middleware(['log.protected', 'auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/forms', [EmpresaController::class, 'store']);
