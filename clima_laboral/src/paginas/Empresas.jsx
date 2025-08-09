@@ -177,15 +177,26 @@ export default function Empresas() {
 
     // Fetch datos del backend
     useEffect(() => {
-        fetch(apiUrl+'api/forms', {
+        fetch(apiUrl + 'api/forms', {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
                 Accept: "application/json"
             },
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 401 || res.status === 500) {
+                        console.warn("401 detectado. Recargando la página...");
+                        window.location.reload(); // 🔄 Fuerza refresh completo
+                        return;
+                    }
+                    throw new Error(`Error HTTP ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => {
+                if (!data) return; // Para evitar errores si ya se recargó
                 const rowsConId = data.data.map(row => ({
                     ...row,
                     id: row.id_empresa
@@ -193,7 +204,10 @@ export default function Empresas() {
                 setRows(rowsConId);
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(err => {
+                console.error("Error en la petición:", err);
+                setLoading(false);
+            });
     }, [reload]);
 
     async function handleEliminar(empresa) {

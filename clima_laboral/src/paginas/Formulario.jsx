@@ -174,6 +174,7 @@ export default function Formulario() {
         );
       } catch (error) {
         console.error("❌ Error al cargar cuestionarios:", error);
+        window.location.reload();
       } finally {
         setLoading(false);
       }
