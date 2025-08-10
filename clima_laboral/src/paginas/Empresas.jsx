@@ -61,31 +61,44 @@ async function handleNuevoFormulario(empresa) {
         // ✅ Elegir dimensiones personalizadas
         } else {
             const dimensiones = [
-                "compromiso",
-                "relaciones_laborales",
-                "condiciones_trabajo",
+                "estructura organizacional",
+                "comunicación organizacional",
+                "políticas",
+                "relaciones interpersonales",
+                "trabajo en equipo",
+                "liderazgo",
+                "capacitación",
+                "evaluación de desempeño",
+                "oportunidades de desarrollo",
+                "selección de personal",
+                "sueldo y prestaciones",
                 "reconocimiento",
-                "desarrollo",
-                "comunicacion",
-                "organizacion_trabajo",
-                "retribucion",
-                "cambio",
-                "confianza",
-                "cultura_innovacion",
-                "motivacion",
-                "seguridad"
+                "condiciones de trabajo",
+                "seguridad e higiene",
+                "identificación con la empresa",
+                "satisfacción con el puesto",
+                "actitud hacia el cambio",
+                "calidad"
             ];
 
             const checkboxesHTML = dimensiones.map(dim => `
-                <label style="display:block;text-align:left">
-                    <input type="checkbox" value="${dim}" class="dimension-checkbox" />
-                    ${dim.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                <label style="display:block;text-align:left;margin:5px 0;padding:5px;background:#f8f9fa;border-radius:4px;">
+                    <input type="checkbox" value="${dim}" class="dimension-checkbox" style="margin-right:10px;" />
+                    ${dim.charAt(0).toUpperCase() + dim.slice(1)}
                 </label>
             `).join('');
 
             const { value: confirmed } = await Swal.fire({
                 title: 'Selecciona las dimensiones',
-                html: `<form id="dimensiones-form">${checkboxesHTML}</form>`,
+                html: `
+                    <div style="max-height:60vh;overflow-y:auto;padding-right:10px;">
+                        <form id="dimensiones-form">${checkboxesHTML}</form>
+                    </div>
+                    <p style="text-align:left;margin-top:10px;font-size:0.9em;">
+                        Puedes seleccionar múltiples dimensiones
+                    </p>
+                `,
+                width: '600px',
                 focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: '✅ Confirmar',
@@ -151,9 +164,10 @@ async function handleNuevoFormulario(empresa) {
 
         Swal.fire({
             title: "📋 Cuestionario Generado",
-            text: respuestaIA || "Rasa procesó los datos correctamente.",
+            html: `<div style="text-align:left;max-height:60vh;overflow-y:auto;">${respuestaIA.replace(/\n/g, '<br>') || "Rasa procesó los datos correctamente."}</div>`,
             icon: "success",
-            confirmButtonText: "Aceptar"
+            confirmButtonText: "Aceptar",
+            width: '800px'
         });
 
     } catch (error) {
