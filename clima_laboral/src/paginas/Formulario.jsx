@@ -139,163 +139,24 @@ const handleDescargar = async (row) => {
 
 const handleRevisar = async (row) => {
   try {
-    // Mostrar feedback de carga mientras se procesa
-    const loadingToast = toast.loading('Enviando cuestionario...');
+    // Mostrar feedback breve de acción
+    const loadingToast = toast.loading('Redirigiendo al reporte...');
     
-    // Preparar los datos completos del registro
-    const payload = {
-      id_cuestionario: row.id_cuestionario,
-      id_empresa: row.id_empresa,
-      nom_empresa: row.nom_empresa,
-      tipo: row.tipo,
-      status_token: row.status_token,
-      tokens: row.tokens,
-      tokens_usados: row.tokens_usados,
-      created_at: row.created_at,
-      // Campos adicionales para tracking
-      metadata: {
-        origin: window.location.origin,
-        user_agent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    const response = await fetch("https://revisar.grupocrehce.com/api/revisar-cuestionario", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        // Header opcional para identificar la fuente (puedes personalizarlo)
-        "X-Request-Source": "React-AdminPanel" 
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
+    // Construir la URL del reporte con el id_cuestionario
+    const reportUrl = `https://revisar.grupocrehce.com/reportes/${row.id_cuestionario}`;
+    
+    // Redirigir a la nueva pestaña
+    window.open(reportUrl, '_blank');
     
     // Cerrar el toast de carga
     toast.dismiss(loadingToast);
-
-    if (response.ok) {
-      toast.success("✅ Cuestionario procesado correctamente");
-      
-      // Mejorar la visualización de los datos recibidos
-      const newWindow = window.open('', '_blank');
-      newWindow.document.write(`
-        <html>
-          <head>
-            <title>Reporte del Cuestionario ${row.id_cuestionario}</title>
-            <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                padding: 20px;
-                line-height: 1.6;
-                color: #333;
-              }
-              .container {
-                max-width: 900px;
-                margin: 0 auto;
-              }
-              .header {
-                background: #f0f0f0;
-                padding: 20px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-              }
-              .data-section {
-                background: #f9f9f9;
-                padding: 20px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-              }
-              pre {
-                background: #2d2d2d;
-                color: #f8f8f2;
-                padding: 15px;
-                border-radius: 5px;
-                overflow-x: auto;
-              }
-              .actions {
-                margin-top: 20px;
-              }
-              .btn {
-                display: inline-block;
-                padding: 8px 16px;
-                background: #4CAF50;
-                color: white;
-                text-decoration: none;
-                border-radius: 4px;
-                margin-right: 10px;
-              }
-              .btn-report {
-                background: #2196F3;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>Reporte del Cuestionario ${row.id_cuestionario}</h1>
-                <p>Empresa: ${row.nom_empresa} | Tipo: ${row.tipo}</p>
-                <p>Enviado el: ${new Date().toLocaleString()}</p>
-              </div>
-              
-              <div class="data-section">
-                <h2>Datos recibidos por el servidor</h2>
-                <pre>${JSON.stringify(data.data, null, 2)}</pre>
-              </div>
-              
-              <div class="data-section">
-                <h2>Respuesta completa del servidor</h2>
-                <pre>${JSON.stringify(data, null, 2)}</pre>
-              </div>
-              
-              <div class="actions">
-                <a href="${data.url_revision}" class="btn btn-report" target="_blank">
-                  Ver reporte oficial
-                </a>
-                <a href="#" class="btn" onclick="window.close()">
-                  Cerrar ventana
-                </a>
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
-    } else {
-      // Manejo mejorado de errores
-      let errorMessage = data.message || "Error al procesar el cuestionario";
-      
-      if (data.error_details) {
-        errorMessage += ` (Detalles: ${data.error_details})`;
-      }
-      
-      toast.error(`❌ ${errorMessage}`);
-      
-      // Mostrar detalles técnicos en consola para depuración
-      console.error("Error del servidor:", {
-        status: response.status,
-        response: data,
-        payload: payload
-      });
-    }
+    toast.success('Redirección exitosa');
+    
   } catch (error) {
+    // Manejo de errores
     toast.dismiss(loadingToast);
-    toast.error("🚨 Error de conexión con el servidor");
-    
-    console.error("Error en handleRevisar:", {
-      error: error,
-      rowData: row
-    });
-    
-    // Opcional: Mostrar un modal con detalles del error
-    Swal.fire({
-      title: 'Error de conexión',
-      html: `No se pudo conectar con el servidor:<br><br>
-            <code>${error.message}</code><br><br>
-            Verifica tu conexión a internet e intenta nuevamente.`,
-      icon: 'error',
-      confirmButtonText: 'Entendido'
-    });
+    toast.error(`Error al redirigir: ${error.message}`);
+    console.error('Error en handleRevisar:', error);
   }
 };
 
