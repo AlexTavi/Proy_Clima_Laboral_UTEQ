@@ -160,7 +160,7 @@ const handleRevisar = async (row) => {
       }
     };
 
-    const response = await fetch("http://194.195.86.4:8888/api/revisar-cuestionario", {
+    const response = await fetch("https://revisar.grupocrehce.com/api/revisar-cuestionario", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
