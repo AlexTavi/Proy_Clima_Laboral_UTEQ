@@ -161,7 +161,7 @@ const handleRevisar = async (row) => {
 };
 
 
-export default function Formulario() {
+export default function Formulario({setPageTitle}) {
   const [rows, setRows] = useState([]);
   const [search] = useState("");
   const [loading, setLoading] = useState(true);
@@ -170,6 +170,7 @@ export default function Formulario() {
 
 
   useEffect(() => {
+    setPageTitle("LISTADO DE FORMULARIOS");
     const fetchCuestionarios = async () => {
       try {
         const res = await fetch(apiUrl+"api/cuestionarios", {
@@ -201,7 +202,7 @@ export default function Formulario() {
         console.error("❌ Error al cargar cuestionarios:", error);
         window.location.reload();
       } finally {
-        setLoading(false);
+        setLoading(false, setPageTitle);
       }
     };
 

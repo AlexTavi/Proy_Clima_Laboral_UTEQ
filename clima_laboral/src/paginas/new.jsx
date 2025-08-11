@@ -18,7 +18,7 @@ import {
 import {toast} from "react-hot-toast";
 
 
-const NuevoFormulario = () => {
+const NuevoFormulario = ({setPageTitle}) => {
   const { id_empresa } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -138,6 +138,7 @@ const NuevoFormulario = () => {
   };
 
   useEffect(() => {
+    setPageTitle("NUEVA EMPRESA");
     if (yaCargado.current) return;
 
     const fetchUserData = async () => {
@@ -183,7 +184,7 @@ const NuevoFormulario = () => {
     if (id_empresa) fetchEmpresa();
 
     yaCargado.current = true;
-  }, [navigate, id_empresa, token, apiUrl]);
+  }, [navigate, id_empresa, token, apiUrl, setPageTitle]);
 
 
   const handleChange = (e) => {
@@ -380,7 +381,6 @@ const NuevoFormulario = () => {
       )}
 
       <main className="formulario-main">
-        <h1 className="form-title">{id_empresa ? "Editar Empresa" : "Nueva Empresa"}</h1>
         <form onSubmit={handleSubmit} className="form-grid">
           <GlassCard>
             <Typography variant="h5" color="primary" mb={2} fontWeight={700}>
@@ -567,6 +567,7 @@ const NuevoFormulario = () => {
                   id="direccion"
                   name="direccion"
                   label="Domicilio"
+                  label="Domicilio"
                   variant="outlined"
                   fullWidth
                   required
@@ -666,51 +667,60 @@ const NuevoFormulario = () => {
                 ))}
               </FormGroup>
               {puestosExtra.map((puesto, idx) => (
-                  <Stack key={`puesto-extra-${idx}`} direction="row" alignItems="center" spacing={2} mb={1}>
-                    <TextField
-                        value={puesto.nombre}
-                        onChange={(e) => {
-                          const nuevoNombre = e.target.value;
-                          setPuestosExtra(prev => {
-                            const copy = [...prev];
-                            copy[idx].nombre = nuevoNombre;
-                            return copy;
-                          });
-                        }}
-                        placeholder="Nombre"
-                        aria-label="Nombre del puesto adicional"
-                        size="small"
-                        sx={{ flex: 1 }}
-                    />
-                    <TextField
-                        type="number"
-                        value={puesto.numero}
-                        onChange={(e) => {
-                          const numero = parseInt(e.target.value) || 0;
-                          setPuestosExtra(prev => {
-                            const copy = [...prev];
-                            copy[idx].numero = numero;
-                            return copy;
-                          });
-                        }}
-                        placeholder="Nº ocupantes"
-                        aria-label="Número de ocupantes"
-                        size="small"
-                        inputProps={{ min: 0 }}
-                        sx={{ width: 130 }}
-                    />
+                  <Stack
+                      key={`puesto-extra-${idx}`}
+                      direction="row"
+                      alignItems="flex-start"
+                      spacing={2}
+                      mb={1}
+                  >
+                    <Stack direction="column" spacing={1} flex={1}>
+                      <TextField
+                          value={puesto.nombre}
+                          onChange={(e) => {
+                            const nuevoNombre = e.target.value;
+                            setPuestosExtra((prev) => {
+                              const copy = [...prev];
+                              copy[idx].nombre = nuevoNombre;
+                              return copy;
+                            });
+                          }}
+                          placeholder="Nombre"
+                          aria-label="Nombre del puesto adicional"
+                          size="small"
+                      />
+                      <TextField
+                          type="number"
+                          value={puesto.numero}
+                          onChange={(e) => {
+                            const numero = parseInt(e.target.value) || 0;
+                            setPuestosExtra((prev) => {
+                              const copy = [...prev];
+                              copy[idx].numero = numero;
+                              return copy;
+                            });
+                          }}
+                          placeholder="Nº ocupantes"
+                          aria-label="Número de ocupantes"
+                          size="small"
+                          inputProps={{ min: 0 }}
+                          sx={{ width: 130 }}
+                      />
+                    </Stack>
+
                     <IconButton
                         onClick={() => {
-                          setPuestosExtra(prev => prev.filter((_, i) => i !== idx));
+                          setPuestosExtra((prev) => prev.filter((_, i) => i !== idx));
                         }}
                         aria-label="Eliminar puesto"
                         color="error"
                         size="small"
                     >
-                      <DeleteIcon/>
+                      <DeleteIcon />
                     </IconButton>
                   </Stack>
               ))}
+
               <Button
                   variant="outlined"
                   onClick={() => setPuestosExtra([...puestosExtra, { nombre: '', numero: 0 }])}

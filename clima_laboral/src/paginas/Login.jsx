@@ -3,7 +3,7 @@ import "../App.scss";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth-context";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -117,7 +117,6 @@ export default function Login() {
         </button>
         {error && <p className="error-text" style={{ color: "red" }}>{error}</p>}
       </form>
-      <Toaster position="top-right" />
     </div>
   );
 }

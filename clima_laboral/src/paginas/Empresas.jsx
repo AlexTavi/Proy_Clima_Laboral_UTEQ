@@ -182,7 +182,7 @@ async function handleNuevoFormulario(empresa) {
 }
 
 
-export default function Empresas() {
+export default function Empresas({setPageTitle}) {
     const [rows, setRows] = useState([]);
     const [search] = useState('');
     const [loading, setLoading] = useState(true);
@@ -191,6 +191,7 @@ export default function Empresas() {
 
     // Fetch datos del backend
     useEffect(() => {
+        setPageTitle("LISTADO DE EMPRESAS");
         fetch(apiUrl + 'api/forms', {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -222,7 +223,7 @@ export default function Empresas() {
                 console.error("Error en la petición:", err);
                 setLoading(false);
             });
-    }, [reload]);
+    }, [reload, setPageTitle]);
 
     async function handleEliminar(empresa) {
         if (!empresa || !empresa.id_empresa) {

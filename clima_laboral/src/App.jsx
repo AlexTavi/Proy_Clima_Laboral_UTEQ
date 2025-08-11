@@ -7,7 +7,6 @@ import {
   FaBuilding,
   FaPlus,
   FaList,
-  FaSignInAlt,
   FaSignOutAlt,
   FaWpforms,
   FaAngleDoubleLeft,
@@ -25,7 +24,7 @@ import Formulario from './paginas/Formulario.jsx';
 import FormularioDetalle from "./paginas/FormularioDetalle.jsx";
 import { Toaster } from "react-hot-toast";
 import './App.scss';
-import logo from '../imagen.jpg';
+import Navbar from "./componentes/NavBar.jsx";
 
 function AppContent() {
   const location = useLocation();
@@ -34,6 +33,8 @@ function AppContent() {
   const { user } = useAuth();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [pageTitle, setPageTitle] = useState("");
+  const hider = ["/", "/login"].includes(location.pathname);
 
   const handleCollapsedChange = () => setCollapsed(!collapsed);
   const handleToggleSidebar = (value) => setToggled(value);
@@ -59,75 +60,73 @@ function AppContent() {
 
   return (
     <div className={`app ${toggled ? 'toggled' : ''}`}>
-      <Sidebar
-        collapsed={collapsed}
-        toggled={toggled}
-        width="240px"
-        collapsedWidth="80px"
-        backgroundColor="#eaebee"
-        breakPoint="md"
-        transitionDuration={300}
-        onBackdropClick={() => handleToggleSidebar(false)}
-        onBreakPoint={(broken) => { if (broken) setCollapsed(false); }}
-        rootStyles={{
-          color: '#000',
-          fontSize: '14px',
-          fontFamily: 'Poppins, sans-serif',
-        }}
-      >
-        <div className="sidebar-header">
-          <div className="sidebar-logo-collapsed">
-            <img src={logo} alt="Logo" className="sidebar-logo-collapsed" />
-          </div>
-        </div>
-
-        <div className="sidebar-btn-wrapper">
-          <button
-            className="sidebar-btn"
-            onClick={handleCollapsedChange}
-            title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-          >
-            {collapsed ? <FaAngleDoubleRight /> : <FaAngleDoubleLeft />}
-          </button>
-        </div>
-
-        <Menu
-          closeOnClick={true}
+      {toggled && (
+          <div
+              className="custom-backdrop"
+              onClick={() => handleToggleSidebar(false)}
+          />
+      )}
+      {!hider && (
+        <Sidebar
+          collapsed={collapsed}
+          toggled={toggled}
+          width="240px"
+          collapsedWidth="80px"
+          backgroundColor="#eaebee"
           transitionDuration={300}
-          menuItemStyles={{
-            button: ({ active }) => ({
-              padding: '12px 24px',
-              margin: '4px 16px',
-              borderRadius: 8,
-              backgroundColor: active ? '#4946a9' : 'transparent',
-              color: active ? '#fff' : '#4946a9',
-              transition: 'all .2s ease',
-              '&:hover': {
-                backgroundColor: '#4946a9',
-                color: '#fff',
-              },
-            }),
-            icon: ({ active }) => ({
-              color: active ? '#fff' : '#4946a9',
-              marginRight: collapsed ? 0 : 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              width: collapsed ? '100%' : 'auto',
-            }),
-            label: { fontWeight: '500' },
-            subMenuContent: { backgroundColor: '#fff' },
+          onBackdropClick={() => handleToggleSidebar(false)}
+          breakPoint="md"
+          onBreakPoint={(broken) => { if (broken) setCollapsed(false); }}
+          rootStyles={{
+            color: '#000',
+            fontSize: '14px',
+            fontFamily: 'Poppins, sans-serif',
           }}
         >
-          {!user ? (
-            <MenuItem
-              icon={<FaSignInAlt />}
-              component={<Link to="/login" onClick={() => handleToggleSidebar(false)} />}
-              active={isActiveRoute('/login')}
+          {/*<div className="sidebar-header">*/}
+          {/*  <div className="sidebar-logo-collapsed">*/}
+          {/*    <img src={logo} alt="Logo" className="sidebar-logo-collapsed" />*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+
+          <div className="sidebar-btn-wrapper">
+            <button
+              className="sidebar-btn"
+              onClick={handleCollapsedChange}
+              title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
             >
-              Iniciar Sesión
-            </MenuItem>
-          ) : (
+              {collapsed ? <FaAngleDoubleRight /> : <FaAngleDoubleLeft />}
+            </button>
+          </div>
+
+          <Menu
+            closeOnClick={true}
+            transitionDuration={300}
+            menuItemStyles={{
+              button: ({ active }) => ({
+                padding: '12px 24px',
+                margin: '4px 16px',
+                borderRadius: 8,
+                backgroundColor: active ? '#4946a9' : 'transparent',
+                color: active ? '#fff' : '#4946a9',
+                transition: 'all .2s ease',
+                '&:hover': {
+                  backgroundColor: '#4946a9',
+                  color: '#fff',
+                },
+              }),
+              icon: ({ active }) => ({
+                color: active ? '#fff' : '#4946a9',
+                marginRight: collapsed ? 0 : 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                width: collapsed ? '100%' : 'auto',
+              }),
+              label: { fontWeight: '500' },
+              subMenuContent: { backgroundColor: '#fff' },
+            }}
+          >
             <>
               <MenuItem
                 icon={<FaCubes />}
@@ -174,10 +173,9 @@ function AppContent() {
                 </button>
               </div>
             </>
-          )}
-        </Menu>
-      </Sidebar>
-
+          </Menu>
+        </Sidebar>
+      )}
       <main className="main-content">
         <div
           className={`btn-toggle ${toggled ? 'hidden' : ''}`}
@@ -186,20 +184,19 @@ function AppContent() {
           <FaBars />
         </div>
 
-        <div className="app-container">
+        {!hider && <Navbar title={pageTitle} />}
           <div className="scrollable-content">
             <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/inicio" element={<Inicio />} />
-              <Route path="/forms/new" element={<NuevoFormulario />} />
-              <Route path="/forms/edit/:id_empresa" element={<NuevoFormulario />} />
-              <Route path="/registros" element={<Empresas />} />
-              <Route path="/formularios" element={<Formulario />} />
-              <Route path="/formulario/:id" element={<FormularioDetalle />} />
+              <Route path="/" element={<Login setPageTitle={setPageTitle}/>} />
+              <Route path="/login" element={<Login setPageTitle={setPageTitle}/>} />
+              <Route path="/inicio" element={<Inicio setPageTitle={setPageTitle}/>} />
+              <Route path="/forms/new" element={<NuevoFormulario setPageTitle={setPageTitle}/>} />
+              <Route path="/forms/edit/:id_empresa" element={<NuevoFormulario setPageTitle={setPageTitle}/>} />
+              <Route path="/registros" element={<Empresas setPageTitle={setPageTitle}/>} />
+              <Route path="/formularios" element={<Formulario setPageTitle={setPageTitle}/>} />
+              <Route path="/formulario/:id" element={<FormularioDetalle setPageTitle={setPageTitle}/>} />
             </Routes>
           </div>
-        </div>
         <Toaster position="bottom-right" />
       </main>
     </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {
   BarChart,
   Bar,
@@ -72,22 +72,12 @@ const dataRadar = [
   { subject: "Satisfacción", A: 99, fullMark: 150 },
 ];
 
-export default function Inicio() {
+export default function Inicio({setPageTitle}) {
+  useEffect(() => {
+    setPageTitle("DASHBOARDS - Clima Laboral");
+  }, [setPageTitle]);
   return (
     <Box sx={{ padding: 4 }}>
-      {/* ✅ TÍTULO PRINCIPAL */}
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: "bold",
-          textAlign: "center",
-          mb: 4,
-          color: "#4946a9",
-        }}
-      >
-        DASHBOARDS - Clima Laboral
-      </Typography>
-
       <Box
         sx={{
           display: "grid",

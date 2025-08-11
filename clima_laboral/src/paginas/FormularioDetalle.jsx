@@ -24,7 +24,7 @@ import PreguntaForm from "../componentes/PreguntaForm";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const token = localStorage.getItem('token');
 
-export default function FormularioDetalle() {
+export default function FormularioDetalle({setPageTitle}) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -42,6 +42,7 @@ export default function FormularioDetalle() {
 
   // ✅ Cargar datos del backend
   useEffect(() => {
+    setPageTitle("Cuestionario #"+id);
     const fetchDatos = async () => {
       try {
         const res = await fetch(apiUrl+"api/cuestionario/edit", {
@@ -65,7 +66,7 @@ export default function FormularioDetalle() {
     };
 
     fetchDatos();
-  }, [id]);
+  }, [id, setPageTitle]);
 
   // Guardar pregunta editada
   const handleGuardarPregunta = async (index) => {
@@ -199,18 +200,6 @@ export default function FormularioDetalle() {
 
   return (
     <Box sx={{ padding: 4 }}>
-      {/* Título y botón volver */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-        <Tooltip title="Volver">
-          <IconButton color="primary" onClick={() => navigate(-1)}>
-            <ArrowBackIcon />
-          </IconButton>
-        </Tooltip>
-        <Typography variant="h5" sx={{ fontWeight: "bold", ml: 1, color: "#4946a9" }}>
-          Cuestionario #{id}
-        </Typography>
-      </Box>
-
       <GlassCard>
         <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
           Preguntas del cuestionario

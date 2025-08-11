@@ -37,7 +37,7 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(255, 255, 255,0.5);
+  background: rgba(50, 45, 193,0.5);
   //background: rgba(140, 128, 171,0.35);
   z-index: 0;
   pointer-events: none;
@@ -367,17 +367,6 @@ body::before {
   font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 
-/* Navbar Styles */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  background-color: #1f1f1f;
-  position: relative;
-  z-index: 100;
-}
-
 .logo {
   font-size: 1.8rem;
   font-weight: 700;
@@ -574,28 +563,6 @@ body::before {
     justify-content: center;
   }
 }
-
-@media (max-width: 480px) {
-  .navbar {
-    padding: 1.2rem 1.5rem;
-  }
-
-  .hero h1 {
-    font-size: 1.8rem;
-  }
-
-  .hero p {
-    font-size: 1rem;
-  }
-
-  .nav-links.mobile {
-    width: 75%;
-  }
-}
-
-
-//inicio css
-
 .inicio-container {
   background-color: #1f1f1f;
   color: white;
@@ -605,41 +572,6 @@ body::before {
   font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 
-/* Navbar Styles */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  background-color: #1f1f1f;
-  position: relative;
-  z-index: 100;
-}
-
-.logo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  z-index: 101;
-}
-
-/* Desktop Navigation */
-.nav-links {
-  display: flex;
-  gap: 2rem;
-}
-
-.nav-links a {
-  color: white;
-  text-decoration: none;
-  font-weight: 400;
-  font-size: 1rem;
-  transition: opacity 0.2s;
-}
-
-.nav-links a:hover {
-  opacity: 0.8;
-}
-
 .profile-icon {
   display: flex;
   align-items: center;
@@ -814,9 +746,6 @@ body::before {
 }
 
 @media (max-width: 480px) {
-  .navbar {
-    padding: 1.2rem 1.5rem;
-  }
 
   .hero h1 {
     font-size: 1.8rem;
@@ -871,61 +800,10 @@ body {
   flex-direction: column;
 }
 
-/* Navbar - Fixed at top */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  background-color: var(--secondary-color);
-  border-bottom: 1px solid var(--border-color);
-  width: 100%;
-}
-
-.navbar-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
   color: white;
-}
-
-/* Navigation Links */
-.desktop-nav-links {
-  display: flex;
-  gap: 1rem;
-}
-
-.mobile-nav-links {
-  display: none;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  font-weight: 400;
-  font-size: 0.9rem;
-  transition: color 0.2s;
-  padding: 0.5rem 0;
-}
-
-.nav-link:hover {
-  color: var(--primary-color);
-}
-
-.nav-link.active {
-  color: var(--primary-color);
-  font-weight: 500;
 }
 
 /* Desktop Profile Section */
@@ -954,22 +832,6 @@ body {
   background-color: white;
   margin: 4px 0;
   transition: all 0.3s ease;
-}
-
-/* Mobile Menu Container */
-.nav-container {
-  display: flex;
-  flex-direction: column;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  width: 100%;
-  background-color: var(--secondary-color);
-}
-
-.nav-container.open {
-  max-height: 1000px;
-  padding: 1rem 0;
 }
 
 /* Profile Section */
@@ -1493,9 +1355,6 @@ body {
 
 /* Tablet Styles */
 @media (min-width: 600px) {
-  .navbar {
-    padding: 1.5rem 2rem;
-  }
 
   .formulario-main {
     padding: 1.5rem;
@@ -1737,69 +1596,6 @@ body {
   }
 }
 
-
-// Estilos para el botón de toggle
-//.btn-toggle {
-//  position: fixed;
-//  top: 20px;
-//  left: 20px;
-//  z-index: 1000;
-//  background: #1f2937;
-//  color: white;
-//  border: none;
-//  border-radius: 8px;
-//  padding: 12px;
-//  cursor: pointer;
-//  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-//  transition: all 0.2s ease;
-//  display: none;
-//
-//  &:hover {
-//    background: #374151;
-//    transform: translateY(-1px);
-//    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-//  }
-//
-//  &.hidden {
-//    opacity: 0;
-//    pointer-events: none;
-//    transform: translateX(-100%);
-//  }
-//
-//  // Mostrar solo en móviles
-//  @media (max-width: 768px) {
-//    display: block;
-//  }
-//}
-
-// Estilos para el sidebar
-.sidebar-header {
-  padding: 20px 16px;
-  border-bottom: 1px solid #374151;
-  text-align: center;
-
-  .sidebar-title {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #2a28be;
-  }
-
-  .sidebar-logo-collapsed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-  }
-}
-
 .sidebar-btn-wrapper {
   padding: 16px;
   border-bottom: 1px solid #2a28be;
@@ -2009,4 +1805,76 @@ footer {
 .company-section-content {
   color: #4946a9;
   font-size: 1.08rem;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  height: 73px;
+  background-color: #eaebee;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  z-index: 1000;
+  margin-top: 0;
+
+  &__container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 1.5rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      height: auto;
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+    }
+  }
+
+  &__title {
+    font-size: 1.125rem; // 18px
+    font-weight: 600;
+    color: #4946a9;
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+      font-size: 1rem; // 16px
+      text-align: center;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+
+    @media (max-width: 480px) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 48px;
+    height: 48px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 4px;
+    }
+  }
+}
+.custom-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
 }

@@ -6,7 +6,7 @@ export default function GlassCard({ children, sx = {}, ...props }) {
             elevation={8}
             sx={{
                 backdropFilter: "blur(14px)",
-                background: "rgba(234,235,238,0.57)",
+                background: "rgba(234,235,238,0.85)",
                 border: "1.5px solid #9a99d355",
                 padding: 4,
                 maxWidth: 500,
