@@ -123,7 +123,7 @@ async function handleNuevoFormulario(empresa) {
 
         if (tipo === "personalizado") {
             // Enviar al endpoint de Flask para cuestionarios personalizados
-            endpoint = "http://194.195.86.4:8850/api/surveys";
+            endpoint = "https://ia.grupocrehce.com/api/surveys";
             mensajeExito = "Cuestionario personalizado generado con éxito";
             
             payload = {
