@@ -147,17 +147,13 @@ async function handleNuevoFormulario(empresa) {
             };
         } else {
             // Enviar al endpoint de Flask para cuestionario general
-            endpoint = "https://ia.grupocrehce.com/api/surveys";
+            endpoint = "https://rasa.grupocrehce.com/webhooks/rest/webhook";
             mensajeExito = "Cuestionario general generado con éxito";
             
             payload = {
-                metadata: {
-                    empresa: {
-                        id_empresa: empresa.id_empresa,
-                        nom_empresa: empresa.nom_empresa
-                    },
-                    dimensiones: [] // El backend usará dimensiones por defecto
-                }
+                sender: `usuario_${empresa.id_empresa}`,
+                message: "Formulario general",
+                metadata: { empresa }
             };
         }
 
@@ -180,6 +176,25 @@ async function handleNuevoFormulario(empresa) {
             body: JSON.stringify(payload)
         });
 
+        // Handle HTML response for custom surveys
+        if (tipo === "personalizado") {
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('text/html')) {
+                // Handle HTML response (question selection interface)
+                const html = await response.text();
+                
+                // Create a new window or modal to show the question selection interface
+                const questionWindow = window.open("", "_blank", "width=1000,height=800");
+                questionWindow.document.write(html);
+                questionWindow.document.close();
+                
+                // Close the loading dialog
+                Swal.close();
+                return;
+            }
+        }
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(
@@ -199,7 +214,7 @@ async function handleNuevoFormulario(empresa) {
                     ${data.questions.map((q, i) => 
                         `<li style="margin-bottom:8px;">
                             <strong>${q}</strong><br>
-                            <em style="color:#666;font-size:0.9em;">Dimensión: ${data.dimensions[i]}</em>
+                            <em style="color:#666;font-size:0.9em;">Dimensión: ${data.dimensions?.[i] || 'N/A'}</em>
                         </li>`
                     ).join('')}
                    </ol>`
@@ -273,7 +288,6 @@ async function handleNuevoFormulario(empresa) {
         });
     }
 }
-
 
 export default function Empresas({setPageTitle}) {
     const [rows, setRows] = useState([]);
