@@ -48,7 +48,12 @@ class CuestionarioController extends Controller
         ])->findOrFail($id_cuestionario);
 
         // Catálogo de dimensiones
-        $dimensions = Dimension::all(['id_dimension', 'nombre']);
+//        $dimensions = Dimension::all(['id_dimension', 'nombre']);
+        $dimensions = $cuestionario->cuestionario_cr
+            ->pluck('cr_reactivo.dimension') // trae las dimensiones asociadas
+            ->unique('id_dimension')        // elimina duplicados
+            ->values();                     // reindexa el array
+
         // Catálogo de escalas
         $escalas = Escala::all(['id_escala', 'nombre']);
         //dd($cuestionario->cuestionario_cr);
