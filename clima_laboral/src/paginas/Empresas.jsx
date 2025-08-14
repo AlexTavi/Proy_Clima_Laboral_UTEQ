@@ -34,7 +34,7 @@ async function handleNuevoFormulario(empresa) {
             return;
         }
 
-        // ✅ 1. Mostrar opciones de tipo de cuestionario
+        // 1. Mostrar opciones de tipo de cuestionario
         const { value: tipoSeleccionado } = await Swal.fire({
             title: "Selecciona el tipo de cuestionario",
             text: "¿Qué tipo de cuestionario deseas generar?",
@@ -50,16 +50,13 @@ async function handleNuevoFormulario(empresa) {
         let tipo = null;
         let dimensionesSeleccionadas = [];
 
-        // ✅ NOM‑035
+        // 2. Procesar la selección del usuario
         if (tipoSeleccionado === true) {
             tipo = "nom035";
-
-        // ✅ General
         } else if (tipoSeleccionado === false) {
             tipo = "general";
-
-        // ✅ Elegir dimensiones personalizadas
         } else {
+            // Mostrar selector de dimensiones personalizadas
             const dimensiones = [
                 "estructura organizacional",
                 "comunicación organizacional",
@@ -121,23 +118,48 @@ async function handleNuevoFormulario(empresa) {
             dimensionesSeleccionadas = confirmed;
         }
 
-        const mensajeIA = tipo === "nom035"
-            ? "Nuevo formulario NOM035"
-            : tipo === "general"
-            ? "Nuevo formulario de empresa"
-            : `Nuevo formulario con dimensiones: ${dimensionesSeleccionadas.join(", ")}`;
+        // 3. Preparar el payload según el tipo de cuestionario
+        let payload, endpoint, mensajeExito;
 
-        const payload = {
-            sender: `usuario_${empresa.id_empresa}`,
-            message: mensajeIA,
-            metadata: {
-                empresa,
-                ...(tipo === "personalizado" ? { dimensiones: dimensionesSeleccionadas } : {})
-            }
-        };
+        if (tipo === "personalizado") {
+            // Enviar al endpoint de Flask para cuestionarios personalizados
+            endpoint = "https://ia.grupocrehce.com/api/surveys";
+            mensajeExito = "Cuestionario personalizado generado con éxito";
+            
+            payload = {
+                metadata: {
+                    empresa: {
+                        id_empresa: empresa.id_empresa,
+                        nom_empresa: empresa.nom_empresa
+                    },
+                    dimensiones: dimensionesSeleccionadas
+                }
+            };
+        } else if (tipo === "nom035") {
+            // Enviar al endpoint de Rasa para NOM-035
+            endpoint = "https://rasa.grupocrehce.com/webhooks/rest/webhook";
+            mensajeExito = "Cuestionario NOM-035 generado con éxito";
+            
+            payload = {
+                sender: `usuario_${empresa.id_empresa}`,
+                message: "Nuevo formulario NOM035",
+                metadata: { empresa }
+            };
+        } else {
+            // Enviar al endpoint de Flask para cuestionario general
+            endpoint = "https://rasa.grupocrehce.com/webhooks/rest/webhook";
+            mensajeExito = "Cuestionario general generado con éxito";
+            
+            payload = {
+                sender: `usuario_${empresa.id_empresa}`,
+                message: "Formulario general",
+                metadata: { empresa }
+            };
+        }
 
-        console.log("🚀 Enviando datos a Rasa:", JSON.stringify(payload, null, 2));
+        console.log("🚀 Enviando datos:", JSON.stringify(payload, null, 2));
 
+        // 4. Mostrar carga mientras se procesa
         Swal.fire({
             title: "⏳ Generando cuestionario...",
             text: "Por favor espera mientras procesamos la solicitud.",
@@ -147,40 +169,125 @@ async function handleNuevoFormulario(empresa) {
             }
         });
 
-        const response = await fetch("https://rasa.grupocrehce.com/webhooks/rest/webhook", {
+        // 5. Enviar la solicitud
+        const response = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
+        // Handle HTML response for custom surveys
+        if (tipo === "personalizado") {
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('text/html')) {
+                // Handle HTML response (question selection interface)
+                const html = await response.text();
+                
+                // Create a new window or modal to show the question selection interface
+                const questionWindow = window.open("", "_blank", "width=1000,height=800");
+                questionWindow.document.write(html);
+                questionWindow.document.close();
+                
+                // Close the loading dialog
+                Swal.close();
+                return;
+            }
+        }
+
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                errorData.error || errorData.message || 
+                `Error HTTP: ${response.status} - ${response.statusText}`
+            );
         }
 
         const data = await response.json();
-        console.log("✅ Respuesta de Rasa:", data);
+        console.log("✅ Respuesta recibida:", data);
 
-        const respuestaIA = data.map(msg => msg.text).filter(Boolean).join("\n");
+        // 6. Mostrar resultados según el tipo de cuestionario
+        if (tipo === "personalizado" || tipo === "general") {
+            // Respuesta del backend Flask
+            const preguntasHTML = data.questions && data.questions.length > 0
+                ? `<ol style="text-align:left;margin-top:10px;">
+                    ${data.questions.map((q, i) => 
+                        `<li style="margin-bottom:8px;">
+                            <strong>${q}</strong><br>
+                            <em style="color:#666;font-size:0.9em;">Dimensión: ${data.dimensions?.[i] || 'N/A'}</em>
+                        </li>`
+                    ).join('')}
+                   </ol>`
+                : "<p>No se generaron preguntas</p>";
 
-        Swal.fire({
-            title: "📋 Cuestionario Generado",
-            html: `<div style="text-align:left;max-height:60vh;overflow-y:auto;">${respuestaIA.replace(/\n/g, '<br>') || "Rasa procesó los datos correctamente."}</div>`,
-            icon: "success",
-            confirmButtonText: "Aceptar",
-            width: '800px'
-        });
+            Swal.fire({
+                title: "📋 Cuestionario Generado",
+                html: `
+                    <div style="text-align:left;max-height:60vh;overflow-y:auto;">
+                        <p><strong>Empresa:</strong> ${data.empresa || empresa.nom_empresa}</p>
+                        <p><strong>ID del cuestionario:</strong> ${data.survey_id || 'N/A'}</p>
+                        <p><strong>Total de preguntas:</strong> ${data.question_count || 0}</p>
+                        <p><strong>Dimensiones incluidas:</strong></p>
+                        <ul>
+                            ${(data.dimensions || dimensionesSeleccionadas || []).map(d => 
+                                `<li>${d.charAt(0).toUpperCase() + d.slice(1)}</li>`
+                            ).join('')}
+                        </ul>
+                        <p><strong>Preguntas generadas:</strong></p>
+                        ${preguntasHTML}
+                    </div>
+                `,
+                icon: "success",
+                confirmButtonText: "Aceptar",
+                width: '800px'
+            });
+
+            // Opcional: Guardar el ID del cuestionario en el estado de la aplicación
+            if (data.survey_id) {
+                // Aquí puedes implementar lógica para almacenar el ID
+                console.log("Cuestionario creado con ID:", data.survey_id);
+            }
+
+        } else {
+            // Respuesta de Rasa (NOM-035)
+            const respuestaIA = Array.isArray(data) 
+                ? data.map(msg => msg.text).filter(Boolean).join("\n")
+                : "Cuestionario NOM-035 generado correctamente";
+
+            Swal.fire({
+                title: "📋 Cuestionario NOM-035 Generado",
+                html: `<div style="text-align:left;max-height:60vh;overflow-y:auto;">
+                    ${respuestaIA.replace(/\n/g, '<br>')}
+                </div>`,
+                icon: "success",
+                confirmButtonText: "Aceptar",
+                width: '800px'
+            });
+        }
 
     } catch (error) {
-        console.error("❌ Error al enviar a Rasa:", error);
+        console.error("❌ Error al generar el cuestionario:", error);
+        
+        let errorMessage = "Hubo un problema al generar el cuestionario.";
+        if (error.message.includes("Failed to fetch")) {
+            errorMessage = "No se pudo conectar con el servidor. Verifica tu conexión a internet.";
+        } else if (error.message.includes("Error HTTP: 500")) {
+            errorMessage = "Error interno del servidor al procesar la solicitud.";
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
         Swal.fire({
             title: "❌ Error",
-            text: "Hubo un problema al enviar los datos a la IA. Revisa la consola.",
+            html: `<div style="text-align:left;">
+                <p>${errorMessage}</p>
+                <p style="font-size:0.8em;color:#666;">Consulta la consola para más detalles.</p>
+            </div>`,
             icon: "error",
             confirmButtonText: "Entendido"
         });
     }
 }
-
 
 export default function Empresas({setPageTitle}) {
     const [rows, setRows] = useState([]);
