@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import GlassCard from "../componentes/GlassCard2.jsx";
 import {
   BarChart,
   Bar,
@@ -22,7 +23,7 @@ import {
 // Colores dinámicos para las respuestas
 const generateColors = (count) => {
   const baseColors = [
-    "#e53e3e", "#fd7f28", "#fbd38d", "#68d391", "#38b2ac",
+    "#e53e3e", "#C60CBC", "#F19E0E", "#68d391", "#38b2ac",
     "#4299e1", "#9f7aea", "#ed64a6", "#38b2ac", "#f56565"
   ];
 
@@ -38,15 +39,6 @@ const generateColors = (count) => {
   }
   return colors;
 };
-
-// Componente de tarjeta con efecto glass
-const GlassCard = ({ children, className = "", title }) => (
-    <div className={`backdrop-blur-sm bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl ${className}`}>
-      {title && <h3 className="text-xl font-bold text-white mb-4">{title}</h3>}
-      {children}
-    </div>
-);
-
 // Componente de loading
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-64">
@@ -134,7 +126,6 @@ const processGenericData = (dataArray, type) => {
     if (total <= 0) return null;
 
     processedItem.total = total;
-    processedItem.index = index;
 
     return processedItem;
   }).filter(item => item !== null);
