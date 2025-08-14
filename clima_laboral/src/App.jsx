@@ -17,7 +17,7 @@ import { useAuth } from './auth-context';
 import Swal from 'sweetalert2';
 
 import Login from './paginas/Login.jsx';
-import Inicio from './paginas/inicio.jsx';
+import Dashboard from './paginas/Dashboard.jsx';
 import NuevoFormulario from './paginas/new.jsx';
 import Empresas from './paginas/Empresas.jsx';
 import Formulario from './paginas/Formulario.jsx';
@@ -128,13 +128,6 @@ function AppContent() {
             }}
           >
             <>
-              <MenuItem
-                icon={<FaCubes />}
-                component={<Link to="/inicio" onClick={() => handleToggleSidebar(false)} />}
-                active={isActiveRoute('/inicio')}
-              >
-                Dashboard
-              </MenuItem>
 
               <SubMenu
                 label="Empresas"
@@ -189,7 +182,7 @@ function AppContent() {
             <Routes>
               <Route path="/" element={<Login setPageTitle={setPageTitle}/>} />
               <Route path="/login" element={<Login setPageTitle={setPageTitle}/>} />
-              <Route path="/inicio" element={<Inicio setPageTitle={setPageTitle}/>} />
+              <Route path="/dashboard/:id_formulario" element={<Dashboard setPageTitle={setPageTitle}/>} />
               <Route path="/forms/new" element={<NuevoFormulario setPageTitle={setPageTitle}/>} />
               <Route path="/forms/edit/:id_empresa" element={<NuevoFormulario setPageTitle={setPageTitle}/>} />
               <Route path="/registros" element={<Empresas setPageTitle={setPageTitle}/>} />

@@ -27,7 +27,7 @@ export default function Login() {
     })
       .then((res) => {
         if (res.ok) {
-          navigate("/inicio");
+          navigate("/registros");
         } else {
           localStorage.removeItem("token");
         }
@@ -86,7 +86,7 @@ export default function Login() {
 
       toast.success("Inicio de sesión exitoso");
       console.log("Redirigiendo a /inicio");
-      navigate("/inicio");
+      navigate("/registros");
     } catch (err) {
       console.error("Error en login:", err.message);
       toast.error("Error de conexión con el servidor");

@@ -8,6 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import FormatIndentIncreaseIcon from '@mui/icons-material/FormatIndentIncrease';
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -315,6 +316,16 @@ export default function Formulario({setPageTitle}) {
       headerAlign: "center",
       renderCell: (params) => (
           <>
+
+            <Tooltip title="Eliminar">
+              <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleEliminar(params.row)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
             {params.row.status_token !== 'activo' && (
               <Tooltip title="Editar">
                 <IconButton
@@ -329,16 +340,6 @@ export default function Formulario({setPageTitle}) {
               </Tooltip>
             )}
 
-            <Tooltip title="Eliminar">
-              <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleEliminar(params.row)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-
             {params.row.status_token !== 'activo' && (
                 <Tooltip title="Aplicar">
                   <IconButton
@@ -351,7 +352,7 @@ export default function Formulario({setPageTitle}) {
                 </Tooltip>
             )}
             {params.row.status_token !== 'inactivo' && (
-                <Tooltip title="Aplicar">
+                <Tooltip title="Descargar reporte">
                   <IconButton
                       size="small"
                       color="secondary"
@@ -369,7 +370,20 @@ export default function Formulario({setPageTitle}) {
                   >
                     <ChecklistIcon />
                   </IconButton>
+            </Tooltip>
+            {params.row.status_token !== 'inactivo' && (
+                <Tooltip title="Gráficas">
+                  <IconButton
+                      size="small"
+                      color="secondary"
+                      onClick={() =>
+                          navigate(`/dashboard/${params.row.id_cuestionario}`)
+                      }
+                  >
+                    <BarChartIcon />
+                  </IconButton>
                 </Tooltip>
+            )}
           </>
       ),
     },
