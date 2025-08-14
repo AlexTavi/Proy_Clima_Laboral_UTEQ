@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuestionarioController;
 use App\Http\Controllers\FrecuenciaExportController;
+use App\Http\Controllers\DashboardController;
 
 // Rutas públicas
 Route::post('/login', [AuthController::class, 'login']);
@@ -25,4 +26,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/forms/{id_cuestionario}', [CuestionarioController::class, 'destroyFormulario']);
     Route::get('/exportar-frecuencia/{id_cuestionario}', [FrecuenciaExportController::class, 'exportar']);
     Route::post('/create-reactivo', [CuestionarioController::class, 'store']);
+    Route::get('/dashboard/{id}', [DashboardController::class, 'resultadosDashboard']);
+
 });
