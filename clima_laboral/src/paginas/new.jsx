@@ -44,6 +44,7 @@ const NuevoFormulario = ({setPageTitle}) => {
     nom_empresa: '',
     rfc_empresa: '',
     direccion: '',
+    colonia: '',
     cp: '',
     municipio: '',
     estado: '',
@@ -225,7 +226,7 @@ const NuevoFormulario = ({setPageTitle}) => {
     const requiredFields = [
       "nom_empresa", "giro",
       "email_empresa", "responsable", "direccion",
-      "cp", "estado", "municipio"
+      "cp", "colonia", "estado", "municipio"
     ];
 
     requiredFields.forEach(field => {
@@ -342,6 +343,7 @@ const NuevoFormulario = ({setPageTitle}) => {
           nom_empresa: '',
           rfc_empresa: '',
           direccion: '',
+          colonia: '',
           cp: '',
           municipio: '',
           estado: '',
@@ -548,8 +550,8 @@ const NuevoFormulario = ({setPageTitle}) => {
                   required
                   value={formData.email_empresa}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.email_empresa}
+                  helperText={formErrors.email_empresa}
               />
               <TextField
                   id="responsable"
@@ -560,21 +562,32 @@ const NuevoFormulario = ({setPageTitle}) => {
                   required
                   value={formData.responsable}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.responsable}
+                  helperText={formErrors.responsable}
               />
               <TextField
                   id="direccion"
                   name="direccion"
-                  label="Domicilio"
                   label="Domicilio"
                   variant="outlined"
                   fullWidth
                   required
                   value={formData.direccion}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.direccion}
+                  helperText={formErrors.direccion}
+              />
+              <TextField
+                  id="colonia"
+                  name="colonia"
+                  label="Colonia"
+                  variant="outlined"
+                  fullWidth
+                  required
+                  value={formData.colonia}
+                  onChange={handleChange}
+                  error={!!formErrors.colonia}
+                  helperText={formErrors.colonia}
               />
               <TextField
                   id="num"
@@ -594,8 +607,8 @@ const NuevoFormulario = ({setPageTitle}) => {
                   required
                   value={formData.cp}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.cp}
+                  helperText={formErrors.cp}
               />
               <TextField
                   id="estado"
@@ -606,8 +619,8 @@ const NuevoFormulario = ({setPageTitle}) => {
                   required
                   value={formData.estado}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.estado}
+                  helperText={formErrors.estado}
               />
               <TextField
                   id="municipio"
@@ -618,8 +631,8 @@ const NuevoFormulario = ({setPageTitle}) => {
                   required
                   value={formData.municipio}
                   onChange={handleChange}
-                  error={!!formErrors.nom_empresa}
-                  helperText={formErrors.nom_empresa}
+                  error={!!formErrors.municipio}
+                  helperText={formErrors.municipio}
               />
             </Box>
           </GlassCard>

@@ -39,6 +39,7 @@ const generateColors = (count) => {
   }
   return colors;
 };
+
 // Componente de loading
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-64">
@@ -126,10 +127,169 @@ const processGenericData = (dataArray, type) => {
     if (total <= 0) return null;
 
     processedItem.total = total;
-    // processedItem.index = index;
+    return processedItem;
+  }).filter(item => item !== null);
+};
+
+// NUEVA FUNCIÓN: Procesar datos por dimensión con cálculos de porcentajes
+const processDimensionData = (dataArray) => {
+  if (!dataArray || !Array.isArray(dataArray) || dataArray.length === 0) return [];
+
+  return dataArray.map(item => {
+    if (!item || typeof item !== 'object') return null;
+
+    const numericFields = extractNumericFields(item);
+    if (numericFields.length === 0) return null;
+
+    // Calcular total
+    let total = 0;
+    numericFields.forEach(field => {
+      total += item[field] || 0;
+    });
+
+    if (total === 0) return null;
+
+    // Solo calcular porcentajes, no incluir valores absolutos
+    const processedItem = {
+      dimension: item.dimension || 'Sin nombre',
+      total: total
+    };
+
+    numericFields.forEach(field => {
+      const value = item[field] || 0;
+      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+      processedItem[field] = percentage; // Solo porcentajes
+    });
 
     return processedItem;
   }).filter(item => item !== null);
+};
+
+// NUEVO COMPONENTE: Tabla con porcentajes para dimensiones
+const DimensionPercentageTable = ({ data, title }) => {
+  if (!data || data.length === 0) {
+    return <div className="text-gray-400 text-center py-8">No hay datos disponibles para {title}</div>;
+  }
+
+  const numericFields = extractNumericFields(data[0]);
+  const colors = generateColors(numericFields.length);
+
+  return (
+      <div className="bg-white rounded-lg p-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+            <tr className="border-b-2 border-gray-200">
+              <th className="text-left py-3 px-2 font-semibold text-gray-800">Dimensión</th>
+              {numericFields.map((field, index) => (
+                  <th key={field} className="text-center py-3 px-2 font-semibold text-gray-800">
+                    {field}
+                  </th>
+              ))}
+              <th className="text-center py-3 px-2 font-semibold text-gray-800">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            {data.map((item, rowIndex) => (
+                <tr key={rowIndex} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-2 font-medium text-gray-800">
+                    {item.dimension}
+                  </td>
+                  {numericFields.map((field, colIndex) => (
+                      <td key={field} className="text-center py-3 px-2">
+                        <div className="flex flex-col items-center">
+                      <span
+                          className="px-2 py-1 rounded text-white text-xs font-medium mb-1"
+                          style={{ backgroundColor: colors[colIndex] }}
+                      >
+                        {item[`${field}_percentage`]}%
+                      </span>
+                          <span className="text-gray-600 text-xs">
+                        ({item[field]})
+                      </span>
+                        </div>
+                      </td>
+                  ))}
+                  <td className="text-center py-3 px-2 font-semibold text-gray-800">
+                    {item.total}
+                  </td>
+                </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+  );
+};
+
+// NUEVO COMPONENTE: Gráfico de barras apiladas con porcentajes
+const StackedPercentageBarChart = ({ data, title }) => {
+  if (!data || data.length === 0) {
+    return <div className="text-gray-400 text-center py-8">No hay datos disponibles para {title}</div>;
+  }
+
+  const numericFields = extractNumericFields(data[0]);
+  const colors = generateColors(numericFields.length);
+
+  // Preparar datos para gráfico de barras apiladas (100%)
+  const chartData = data.map(item => {
+    const chartItem = {
+      dimension: item.dimension,
+    };
+
+    numericFields.forEach(field => {
+      chartItem[field] = item[field] || 0; // Usar directamente los porcentajes
+    });
+
+    return chartItem;
+  });
+
+  return (
+      <div className="bg-white rounded-lg p-4">
+        <ResponsiveContainer width="100%" height={500}>
+          <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis
+                dataKey="dimension"
+                stroke="#374151"
+                angle={-45}
+                textAnchor="end"
+                height={150}
+                fontSize={10}
+                interval={0}
+            />
+            <YAxis
+                stroke="#374151"
+                domain={[0, 100]}
+                tickFormatter={(value) => `${value}%`}
+            />
+            <Tooltip
+                formatter={(value, name) => [`${value}%`, name]}
+                contentStyle={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                  color: '#374151',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+            />
+            <Legend />
+            {numericFields.map((field, index) => (
+                <Bar
+                    key={field}
+                    dataKey={field}
+                    stackId="percentage"
+                    fill={colors[index]}
+                    name={field}
+                />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+  );
 };
 
 // Componente para gráfico de barras genérico
@@ -237,64 +397,6 @@ const GenericPieChart = ({ data, title }) => {
   );
 };
 
-// Componente para mostrar datos agrupados por área
-const AreaGroupedData = ({ data }) => {
-  if (!data || data.length === 0) return null;
-
-  const groupedByArea = {};
-
-  data.forEach(item => {
-    if (!item.area) return;
-
-    if (!groupedByArea[item.area]) {
-      groupedByArea[item.area] = [];
-    }
-    groupedByArea[item.area].push(item);
-  });
-
-  const areas = Object.keys(groupedByArea);
-  if (areas.length === 0) return null;
-
-  return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {areas.map(area => (
-            <GlassCard key={area} title={`📍 ${area}`} className="bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-              <div className="space-y-3">
-                {groupedByArea[area].map((item, index) => {
-                  const numericFields = extractNumericFields(item);
-                  const colors = generateColors(numericFields.length);
-
-                  return (
-                      <div key={index} className="bg-black/20 rounded-lg p-3">
-                        <div className="text-white font-medium mb-2">
-                          {item.dimension || item.name || `Item ${index + 1}`}
-                        </div>
-                        <div className="text-sm text-gray-300 mb-2">
-                          Total: {item.total || 'N/A'}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {numericFields.map((field, fieldIndex) => (
-                              item[field] > 0 && (
-                                  <span
-                                      key={field}
-                                      className="px-2 py-1 rounded text-xs text-white font-medium"
-                                      style={{ backgroundColor: colors[fieldIndex] }}
-                                  >
-                          {field}: {item[field]}
-                        </span>
-                              )
-                          ))}
-                        </div>
-                      </div>
-                  );
-                })}
-              </div>
-            </GlassCard>
-        ))}
-      </div>
-  );
-};
-
 // Componente principal del Dashboard
 export default function Dashboard({ setPageTitle }) {
   const { id_formulario } = useParams();
@@ -364,6 +466,9 @@ export default function Dashboard({ setPageTitle }) {
 
   Object.keys(data).forEach(key => {
     if (Array.isArray(data[key]) && data[key].length > 0) {
+      // IGNORAR por_area_dimension como solicitaste
+      if (key === 'por_area_dimension') return;
+
       const dataType = detectDataType(data[key]);
       const processedData = processGenericData(data[key], dataType);
 
@@ -401,27 +506,20 @@ export default function Dashboard({ setPageTitle }) {
                         </GlassCard>
                     )}
 
-                    {/* Datos por dimensión - Gráfico de barras */}
+                    {/* MODIFICACIÓN PRINCIPAL: Datos por dimensión con cálculos de porcentaje */}
                     {section.type === 'dimension' && (
-                        <GlassCard className="bg-gradient-to-br from-green-500/20 to-blue-500/20">
-                          <h2 className="text-2xl font-bold text-white mb-6">
-                            📈 {section.title}
-                          </h2>
-                          <GenericBarChart
-                              data={section.data}
-                              title={section.title}
-                              labelKey="dimension"
-                          />
-                        </GlassCard>
-                    )}
+                        <div className="space-y-8">
+                          <GlassCard className="bg-gradient-to-br from-green-500/20 to-blue-500/20">
+                            <h2 className="text-2xl font-bold text-white mb-6">
+                              📈 {section.title} - Análisis con Porcentajes
+                            </h2>
 
-                    {/* Datos por área y dimensión */}
-                    {section.type === 'area_dimension' && (
-                        <div>
-                          <h2 className="text-2xl font-bold text-white mb-6">
-                            🏢 {section.title}
-                          </h2>
-                          <AreaGroupedData data={section.data} />
+                            {/* Gráfico de barras apiladas */}
+                            <StackedPercentageBarChart
+                                data={processDimensionData(section.original)}
+                                title={section.title}
+                            />
+                          </GlassCard>
                         </div>
                     )}
 
