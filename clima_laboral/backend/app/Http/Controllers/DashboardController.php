@@ -2,17 +2,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function resultadosDashboard($id_cuestionario): \Illuminate\Http\JsonResponse
+    public function resultadosDashboard($id_cuestionario)
     {
         $likert = [
-            1 => 'Muy en desacuerdo',
+            1 => 'Totalmente en desacuerdo',
             2 => 'En desacuerdo',
-            3 => 'Neutral',
+            3 => 'Parcialmente de acuerdo',
             4 => 'De acuerdo',
-            5 => 'Muy de acuerdo'
+            5 => 'Totalmente de acuerdo'
         ];
 
         // ----------------------
