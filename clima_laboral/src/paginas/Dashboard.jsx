@@ -126,6 +126,7 @@ const processGenericData = (dataArray, type) => {
     if (total <= 0) return null;
 
     processedItem.total = total;
+    // processedItem.index = index;
 
     return processedItem;
   }).filter(item => item !== null);
