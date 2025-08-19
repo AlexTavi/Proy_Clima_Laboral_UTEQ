@@ -31,7 +31,8 @@ class Empresa extends Model
         'answers',
         'direccion',
         'num',
-        'empleados'
+        'empleados',
+        'colonia'
     ];
 
     protected $casts = [
