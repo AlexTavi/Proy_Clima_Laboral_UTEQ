@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('empresas', function (Blueprint $table) {
             // Cambiar longitud de varchar (requiere doctrine/dbal instalado)
-            $table->string('rfc_empresa', 15)->change();
+            $table->string('rfc_empresa', 15)->nullable()->change();
 
             // Agregar columna nueva
             $table->string('colonia')->nullable()->after('rfc_empresa');
