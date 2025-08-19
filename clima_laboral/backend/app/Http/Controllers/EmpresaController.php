@@ -36,7 +36,7 @@ class EmpresaController extends Controller
     {
         return $request->validate([
             'nom_empresa' => 'required|string|max:60',
-            'rfc_empresa' => 'nullable|string|max:12',
+            'rfc_empresa' => 'nullable|string|max:15',
             'cp' => 'required|string|max:5',
             'municipio' => 'required|string|max:60',
             'estado' => 'required|string|max:60',
@@ -51,6 +51,7 @@ class EmpresaController extends Controller
             'direccion' => 'required|string|max:255',
             'num' => 'nullable|string|max:255',
             'empleados' => 'required|string|max:255',
+            'colonia' => 'required|string|max:255',
         ]);
     }
     protected function sanitizeRequest(Request $request): void
