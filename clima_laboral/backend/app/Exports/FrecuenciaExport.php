@@ -1,10 +1,8 @@
 <?php
 namespace App\Exports;
 
-
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
@@ -27,14 +25,24 @@ class FrecuenciaExport implements WithMultipleSheets
 
         $sheets = [];
 
+        // Hojas por adscripción
         foreach ($adscripciones as $adscripcion) {
             $sheets[] = new AdscripcionSheet($this->id_cuestionario, $adscripcion);
         }
+
+        // Hoja global de respuestas agrupadas por dimensión
+        $sheets[] = new DimensionSheet($this->id_cuestionario);
+
+        // Hoja de totales de dimensión por área
+        $sheets[] = new DimensionAreaSheet($this->id_cuestionario);
 
         return $sheets;
     }
 }
 
+/**
+ * Hoja por Adscripción (ya la tienes)
+ */
 class AdscripcionSheet implements FromArray, WithTitle
 {
     protected $id_cuestionario;
@@ -48,16 +56,14 @@ class AdscripcionSheet implements FromArray, WithTitle
 
     public function array(): array
     {
-        // Escala Likert de 5 puntos
         $likert = [
-            1 => 'Muy en desacuerdo',
+            1 => 'Totalmente en desacuerdo',
             2 => 'En desacuerdo',
-            3 => 'Neutral',
+            3 => 'Parcialmente de acuerdo',
             4 => 'De acuerdo',
-            5 => 'Muy de acuerdo',
+            5 => 'Totalmente de acuerdo',
         ];
 
-        // Obtener áreas de esa adscripción
         $areas = DB::table('participantes')
             ->where('id_cuestionario', $this->id_cuestionario)
             ->where('adscripcion', $this->adscripcion)
@@ -114,7 +120,7 @@ class AdscripcionSheet implements FromArray, WithTitle
                 ];
             }
 
-            $final[] = []; // Línea vacía entre áreas
+            $final[] = [];
         }
 
         return $final;
@@ -123,5 +129,97 @@ class AdscripcionSheet implements FromArray, WithTitle
     public function title(): string
     {
         return $this->adscripcion;
+    }
+}
+
+/**
+ * Hoja global: Respuestas agrupadas por dimensión
+ */
+class DimensionSheet implements FromArray, WithTitle
+{
+    protected $id_cuestionario;
+
+    public function __construct($id_cuestionario)
+    {
+        $this->id_cuestionario = $id_cuestionario;
+    }
+
+    public function array(): array
+    {
+        $final = [];
+        $final[] = ['Dimensión', 'Pregunta', 'Respuesta', 'Total'];
+
+        $data = DB::table('respuestas as val')
+            ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
+            ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
+            ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
+            ->select(
+                'd.nombre as dimension',
+                'r.pregunta',
+                'val.respuesta',
+                DB::raw('COUNT(*) as total')
+            )
+            ->where('p.id_cuestionario', $this->id_cuestionario)
+            ->groupBy('d.nombre', 'r.pregunta', 'val.respuesta')
+            ->orderBy('d.nombre')
+            ->orderBy('r.pregunta')
+            ->orderBy('val.respuesta')
+            ->get();
+
+        foreach ($data as $row) {
+            $final[] = [$row->dimension, $row->pregunta, $row->respuesta, $row->total];
+        }
+
+        return $final;
+    }
+
+    public function title(): string
+    {
+        return 'Por Dimensión';
+    }
+}
+
+/**
+ * Hoja: Totales de dimensión por área
+ */
+class DimensionAreaSheet implements FromArray, WithTitle
+{
+    protected $id_cuestionario;
+
+    public function __construct($id_cuestionario)
+    {
+        $this->id_cuestionario = $id_cuestionario;
+    }
+
+    public function array(): array
+    {
+        $final = [];
+        $final[] = ['Área', 'Dimensión', 'Total respuestas'];
+
+        $data = DB::table('respuestas as val')
+            ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
+            ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
+            ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
+            ->select(
+                'p.area',
+                'd.nombre as dimension',
+                DB::raw('COUNT(val.respuesta) as total')
+            )
+            ->where('p.id_cuestionario', $this->id_cuestionario)
+            ->groupBy('p.area', 'd.nombre')
+            ->orderBy('p.area')
+            ->orderBy('d.nombre')
+            ->get();
+
+        foreach ($data as $row) {
+            $final[] = [$row->area, $row->dimension, $row->total];
+        }
+
+        return $final;
+    }
+
+    public function title(): string
+    {
+        return 'Totales Dimensión/Área';
     }
 }
