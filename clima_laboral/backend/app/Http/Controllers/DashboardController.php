@@ -8,101 +8,62 @@ class DashboardController extends Controller
 {
     public function resultadosDashboard($id_cuestionario)
     {
-        $likert = [
-            1 => 'Totalmente en desacuerdo',
-            2 => 'En desacuerdo',
-            3 => 'Parcialmente de acuerdo',
-            4 => 'De acuerdo',
-            5 => 'Totalmente de acuerdo'
+        // Mapeo de Likert a categorías
+        $grupos = [
+            1 => 'Insatisfecho',
+            2 => 'Insatisfecho',
+            3 => 'Indecisos',
+            4 => 'Satisfechos',
+            5 => 'Satisfechos',
         ];
 
-        // ----------------------
-        // 1. Resultados por Dimensión
-        // ----------------------
-        $rawDimensiones = DB::table('respuestas as val')
+        // Consulta a la BD
+        $rawData = DB::table('respuestas as val')
             ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
             ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
             ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
-            ->select('d.nombre as dimension', 'val.respuesta', DB::raw('COUNT(*) as total'))
+            ->select(
+                'd.nombre as dimension',
+                'val.respuesta',
+                DB::raw('COUNT(*) as total')
+            )
             ->where('p.id_cuestionario', $id_cuestionario)
             ->groupBy('d.nombre', 'val.respuesta')
             ->orderBy('d.nombre')
             ->get();
 
-        $pivotDimensiones = [];
-        foreach ($rawDimensiones as $row) {
-            if (!isset($pivotDimensiones[$row->dimension])) {
-                $pivotDimensiones[$row->dimension] = [
-                    'dimension' => $row->dimension,
-                    $likert[1] => 0,
-                    $likert[2] => 0,
-                    $likert[3] => 0,
-                    $likert[4] => 0,
-                    $likert[5] => 0
+        // Pivot por dimensión
+        $pivot = [];
+        foreach ($rawData as $row) {
+            $categoria = $grupos[$row->respuesta] ?? null;
+            if (!$categoria) continue;
+
+            if (!isset($pivot[$row->dimension])) {
+                $pivot[$row->dimension] = [
+                    'Insatisfecho' => 0,
+                    'Indecisos' => 0,
+                    'Satisfechos' => 0,
+                    'total' => 0
                 ];
             }
-            $pivotDimensiones[$row->dimension][$likert[$row->respuesta]] = $row->total;
+
+            $pivot[$row->dimension][$categoria] += $row->total;
+            $pivot[$row->dimension]['total'] += $row->total;
         }
-        $resultadosPorDimension = array_values($pivotDimensiones);
 
-        // ----------------------
-        // 2. Resultados por Área y Dimensión
-        // ----------------------
-        $rawAreas = DB::table('respuestas as val')
-            ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
-            ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
-            ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
-            ->select('p.area', 'd.nombre as dimension', 'val.respuesta', DB::raw('COUNT(*) as total'))
-            ->where('p.id_cuestionario', $id_cuestionario)
-            ->groupBy('p.area', 'd.nombre', 'val.respuesta')
-            ->orderBy('p.area')
-            ->orderBy('d.nombre')
-            ->get();
-
-        $pivotAreas = [];
-        foreach ($rawAreas as $row) {
-            $key = $row->area . '|' . $row->dimension;
-            if (!isset($pivotAreas[$key])) {
-                $pivotAreas[$key] = [
-                    'area' => $row->area,
-                    'dimension' => $row->dimension,
-                    $likert[1] => 0,
-                    $likert[2] => 0,
-                    $likert[3] => 0,
-                    $likert[4] => 0,
-                    $likert[5] => 0
-                ];
-            }
-            $pivotAreas[$key][$likert[$row->respuesta]] = $row->total;
-        }
-        $resultadosPorAreaDimension = array_values($pivotAreas);
-
-        // ----------------------
-        // 3. Resultados Globales
-        // ----------------------
-        $rawGlobales = DB::table('respuestas as val')
-            ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
-            ->where('p.id_cuestionario', $id_cuestionario)
-            ->select('val.respuesta', DB::raw('COUNT(*) as total'))
-            ->groupBy('val.respuesta')
-            ->orderBy('val.respuesta')
-            ->get();
-
-        $resultadosGlobales = [];
-        foreach ($likert as $key => $label) {
-            $resultadosGlobales[] = [
-                'respuesta' => $label,
-                'total' => $rawGlobales->firstWhere('respuesta', $key)->total ?? 0
+        // Convertir a porcentajes
+        $final = [];
+        foreach ($pivot as $dimension => $valores) {
+            $total = $valores['total'] > 0 ? $valores['total'] : 1; // evitar división por 0
+            $final[] = [
+                'dimension' => $dimension,
+                'Insatisfecho' => round(($valores['Insatisfecho'] / $total) * 100, 2),
+                'Indecisos' => round(($valores['Indecisos'] / $total) * 100, 2),
+                'Satisfechos' => round(($valores['Satisfechos'] / $total) * 100, 2),
             ];
         }
 
-        // ----------------------
-        // Respuesta final
-        // ----------------------
-        return response()->json([
-            'por_dimension' => $resultadosPorDimension,
-            'por_area_dimension' => $resultadosPorAreaDimension,
-            'global' => $resultadosGlobales
-        ]);
+        return response()->json($final);
     }
 }
+
