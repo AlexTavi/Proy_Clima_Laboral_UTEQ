@@ -133,7 +133,7 @@ class AdscripcionSheet implements FromArray, WithTitle
 }
 
 /**
- * Hoja global: Respuestas agrupadas por dimensión
+ * Hoja global: Respuestas agrupadas por dimensión (con escala Likert en columnas)
  */
 class DimensionSheet implements FromArray, WithTitle
 {
@@ -146,10 +146,19 @@ class DimensionSheet implements FromArray, WithTitle
 
     public function array(): array
     {
-        $final = [];
-        $final[] = ['Dimensión', 'Pregunta', 'Respuesta', 'Total'];
+        // Escala Likert
+        $likert = [
+            1 => 'Totalmente en desacuerdo',
+            2 => 'En desacuerdo',
+            3 => 'Parcialmente de acuerdo',
+            4 => 'De acuerdo',
+            5 => 'Totalmente de acuerdo',
+        ];
 
-        $data = DB::table('respuestas as val')
+        $final = [];
+        $final[] = ['Dimensión', 'Pregunta', ...array_values($likert)];
+
+        $rawData = DB::table('respuestas as val')
             ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
             ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
             ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
@@ -166,8 +175,31 @@ class DimensionSheet implements FromArray, WithTitle
             ->orderBy('val.respuesta')
             ->get();
 
-        foreach ($data as $row) {
-            $final[] = [$row->dimension, $row->pregunta, $row->respuesta, $row->total];
+        // Pivotear a formato Likert
+        $pivot = [];
+        foreach ($rawData as $row) {
+            $key = $row->dimension . '|' . $row->pregunta;
+            if (!isset($pivot[$key])) {
+                $pivot[$key] = [
+                    'dimension' => $row->dimension,
+                    'pregunta'  => $row->pregunta,
+                    1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0
+                ];
+            }
+            $pivot[$key][$row->respuesta] = $row->total;
+        }
+
+        // Convertir a filas finales
+        foreach ($pivot as $item) {
+            $final[] = [
+                $item['dimension'],
+                $item['pregunta'],
+                $item[1] ?? 0,
+                $item[2] ?? 0,
+                $item[3] ?? 0,
+                $item[4] ?? 0,
+                $item[5] ?? 0,
+            ];
         }
 
         return $final;
@@ -180,7 +212,7 @@ class DimensionSheet implements FromArray, WithTitle
 }
 
 /**
- * Hoja: Totales de dimensión por área
+ * Hoja: Totales de dimensión por área (con escala Likert en columnas)
  */
 class DimensionAreaSheet implements FromArray, WithTitle
 {
@@ -193,26 +225,60 @@ class DimensionAreaSheet implements FromArray, WithTitle
 
     public function array(): array
     {
-        $final = [];
-        $final[] = ['Área', 'Dimensión', 'Total respuestas'];
+        // Escala Likert
+        $likert = [
+            1 => 'Totalmente en desacuerdo',
+            2 => 'En desacuerdo',
+            3 => 'Parcialmente de acuerdo',
+            4 => 'De acuerdo',
+            5 => 'Totalmente de acuerdo',
+        ];
 
-        $data = DB::table('respuestas as val')
+        $final = [];
+        $final[] = ['Área', 'Dimensión', ...array_values($likert)];
+
+        $rawData = DB::table('respuestas as val')
             ->join('participantes as p', 'p.id_participante', '=', 'val.id_participante')
             ->join('reactivos as r', 'r.id_reactivo', '=', 'val.id_reactivo')
             ->join('dimensions as d', 'd.id_dimension', '=', 'r.id_dimension')
             ->select(
                 'p.area',
                 'd.nombre as dimension',
-                DB::raw('COUNT(val.respuesta) as total')
+                'val.respuesta',
+                DB::raw('COUNT(*) as total')
             )
             ->where('p.id_cuestionario', $this->id_cuestionario)
-            ->groupBy('p.area', 'd.nombre')
+            ->groupBy('p.area', 'd.nombre', 'val.respuesta')
             ->orderBy('p.area')
             ->orderBy('d.nombre')
+            ->orderBy('val.respuesta')
             ->get();
 
-        foreach ($data as $row) {
-            $final[] = [$row->area, $row->dimension, $row->total];
+        // Pivotear resultados por área + dimensión
+        $pivot = [];
+        foreach ($rawData as $row) {
+            $key = $row->area . '|' . $row->dimension;
+            if (!isset($pivot[$key])) {
+                $pivot[$key] = [
+                    'area' => $row->area,
+                    'dimension' => $row->dimension,
+                    1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0
+                ];
+            }
+            $pivot[$key][$row->respuesta] = $row->total;
+        }
+
+        // Convertir a filas finales
+        foreach ($pivot as $item) {
+            $final[] = [
+                $item['area'],
+                $item['dimension'],
+                $item[1] ?? 0,
+                $item[2] ?? 0,
+                $item[3] ?? 0,
+                $item[4] ?? 0,
+                $item[5] ?? 0,
+            ];
         }
 
         return $final;
@@ -223,3 +289,4 @@ class DimensionAreaSheet implements FromArray, WithTitle
         return 'Totales Dimensión/Área';
     }
 }
+
